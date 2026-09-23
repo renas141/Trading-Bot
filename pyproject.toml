@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "modular-crypto-trading-bot"
+version = "0.1.0"
+description = "Local, simulation-only foundation for modular crypto trading research"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = []
+
+[project.scripts]
+trading-bot = "app.cli:main"
+trading-data = "app.market_data.cli:main"
+trading-research = "backtesting.research:main"
+trading-diagnose = "backtesting.diagnostics:main"
+trading-net-research = "backtesting.net_reward_research:main"
+trading-dashboard = "dashboard.server:main"
+
+[tool.setuptools.packages.find]
+include = ["app*", "backtesting*", "dashboard*"]
+
+[tool.setuptools.package-data]
+dashboard = ["static/*.html", "static/*.css", "static/*.js"]
+
+[tool.uv]
+package = true

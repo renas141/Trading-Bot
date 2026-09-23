@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Trading Bot · Forschungsübersicht</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Zum Inhalt</a>
+  <aside class="sidebar">
+    <a class="brand" href="/">Trading Bot<span>Forschungsjournal</span></a>
+    <div class="market"><span class="coin" aria-hidden="true">₿</span><div>Bitcoin<span>BTC / EUR · Spot</span></div></div>
+    <nav aria-label="Ansichten">
+      <button class="nav-item active" data-view="overview" aria-current="page"><span>Übersicht</span><span aria-hidden="true">01</span></button>
+      <button class="nav-item" data-view="trades"><span>Trades</span><span aria-hidden="true">02</span></button>
+      <button class="nav-item" data-view="signals"><span>Entscheidungen</span><span aria-hidden="true">03</span></button>
+    </nav>
+    <div class="sidebar-bottom"><span class="mode">Historische Simulation</span><p>Ergebnisse nachvollziehen.<br>Entscheidungen verstehen.</p><div class="read-only">Nur lesend · LIVE gesperrt</div></div>
+  </aside>
+  <main id="main">
+    <header class="topbar"><span>Lokaler Arbeitsbereich <span class="divider">/</span> Forschung</span><button id="refresh" class="quiet-button">Neu laden <span aria-hidden="true">↻</span></button></header>
+    <div class="page-heading"><div><h1 id="page-title">Forschungsübersicht</h1><p id="page-subtitle">Was die bisherigen Versuche zeigen.</p></div><a id="report-link" class="outline-button" hidden>Bericht herunterladen <span aria-hidden="true">↗</span></a></div>
+    <div id="global-state" class="state-panel" role="status">Forschungsergebnisse werden geladen …</div>
+    <div id="workspace" hidden>
+      <section class="selection" aria-label="Auswertung auswählen">
+        <label>Versuch<select id="study"></select></label>
+        <label>Zeitraum<select id="group"></select></label>
+        <label>Kostenannahme<select id="cost"><option value="base">Normale Kosten</option><option value="double_costs">Doppelte Kosten</option></select></label>
+        <label>Variante<select id="variant"></select></label>
+      </section>
+      <div class="context-line"><span id="period-label"></span><span id="timeframe-label"></span></div>
+      <div id="run-state" class="state-panel" role="status" hidden></div>
+      <div id="run-content" hidden>
+        <section id="overview-view" class="view" aria-label="Ergebnisse">
+          <div class="finding"><span class="finding-mark" aria-hidden="true">!</span><div><strong id="finding-title"></strong><p id="finding-text"></p></div></div>
+          <section class="metrics" aria-label="Kennzahlen">
+            <div><span>Virtuelles Endkapital</span><strong id="capital">—</strong><small id="initial"></small></div>
+            <div><span>Ergebnis nach Kosten</span><strong id="net">—</strong><small id="return"></small></div>
+            <div><span>Ausgeführte Trades</span><strong id="trade-count">—</strong><small id="wins"></small></div>
+            <div><span>Maximaler Rückgang</span><strong id="drawdown">—</strong><small>Vom jeweils höchsten Kontowert</small></div>
+          </section>
+          <div class="research-grid">
+            <section class="panel chart-panel"><div class="panel-heading"><h2>Kontoverlauf</h2><span class="legend"><i></i>Virtuelles Kapital</span></div><div id="chart"></div><p class="chart-caption" id="chart-caption"></p></section>
+            <section class="panel compare-panel"><div class="panel-heading"><h2>Im Vergleich</h2><span id="compare-cost" class="subtle"></span></div><p class="subtle">Gleicher Zeitraum · Ergebnis nach Kosten</p><div id="comparison"></div><p class="footnote" id="benchmark-note"></p></section>
+          </div>
+          <div class="details-grid">
+            <section class="panel"><div class="panel-heading"><h2>Warum kein Einstieg?</h2><button class="text-button" id="see-signals">Entscheidungen ansehen ↗</button></div><div class="signal-summary" id="signal-summary"></div><div id="rejections"></div></section>
+            <section class="panel"><div class="panel-heading"><h2>Einordnung</h2></div><dl class="facts"><div><dt>Gezahlte Gebühren</dt><dd id="fees"></dd></div><div><dt>Ø Ergebnis pro Trade</dt><dd id="expectancy"></dd></div><div><dt>Gewinntrades</dt><dd id="win-rate"></dd></div></dl><p id="sample-note" class="footnote"></p><p class="footnote">Spread und Slippage sind bereits im Nettoergebnis enthalten. Die Gebührenzeile zeigt nur Kauf- und Verkaufsgebühren.</p></section>
+          </div>
+        </section>
+        <section id="trades-view" class="view" aria-label="Trade-Journal" hidden>
+          <div class="section-toolbar"><div><h2>Trade-Journal</h2><p>Ein- und Ausstieg, Kosten und Begründungen je Trade.</p></div><label>Ergebnis<select id="outcome"><option value="all">Alle Trades</option><option value="win">Gewinne</option><option value="loss">Verluste</option></select></label></div>
+          <div class="panel table-panel"><div id="trade-state" class="table-state" role="status"></div><div class="table-scroll"><table id="trade-table"><thead><tr><th>Einstieg · UTC</th><th>Ausstieg</th><th>Menge · BTC</th><th>Gebühren</th><th>Netto</th><th><span class="sr-only">Details</span></th></tr></thead><tbody id="trade-rows"></tbody></table></div><div class="pagination"><span id="trade-page-label"></span><div><button id="trade-prev" class="quiet-button">← Zurück</button><button id="trade-next" class="quiet-button">Weiter →</button></div></div></div>
+        </section>
+        <section id="signals-view" class="view" aria-label="Signalentscheidungen" hidden>
+          <div class="section-toolbar"><div><h2>Signalentscheidungen</h2><p>Welche Signale entstanden – und was die Risikoprüfung daraus machte.</p></div><div class="filter-pair"><label>Signal<select id="direction"><option value="LONG">Kaufsignale</option><option value="HOLD">Abwarten</option><option value="ALL">Alle Signale</option></select></label><label>Entscheidung<select id="decision"><option value="all">Alle Entscheidungen</option><option value="denied">Nicht freigegeben</option><option value="allowed">Freigegeben</option></select></label></div></div>
+          <div class="panel table-panel"><div id="signal-state" class="table-state" role="status"></div><div class="table-scroll"><table id="signal-table"><thead><tr><th>Zeitpunkt · UTC</th><th>Signal</th><th>Risikoprüfung</th><th>Begründung</th><th><span class="sr-only">Details</span></th></tr></thead><tbody id="signal-rows"></tbody></table></div><div class="pagination"><span id="signal-page-label"></span><div><button id="signal-prev" class="quiet-button">← Zurück</button><button id="signal-next" class="quiet-button">Weiter →</button></div></div></div>
+          <p class="footnote">Der Bedingungs-Score ist keine Gewinnwahrscheinlichkeit. Die Detailansicht zeigt die gespeicherten Originalbegründungen.</p>
+        </section>
+      </div>
+    </div>
+    <footer>Trading Bot · Lokale Forschung<span>Forschungsberichte · keine Orderfunktion</span></footer>
+  </main>
+  <dialog id="detail-dialog" aria-labelledby="detail-title"><div class="dialog-heading"><h2 id="detail-title"></h2><button id="close-detail" class="outline-button">Schließen ×</button></div><div id="detail-content"></div></dialog>
+</body>
+</html>
