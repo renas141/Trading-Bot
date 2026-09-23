@@ -88,6 +88,7 @@ class KrakenPerpetualMonitorTests(unittest.TestCase):
         stamp = [datetime(2026, 9, 23, 12, 10, 30, tzinfo=timezone.utc)]
         attempt = [0]
         calls = [0]
+        starts = []
 
         def clock():
             return stamp[0]
@@ -98,9 +99,12 @@ class KrakenPerpetualMonitorTests(unittest.TestCase):
             kind = parsed.path.rsplit("/", 1)[-1]
             if kind == "spreads":
                 attempt[0] += 1
+                starts.append(stamp[0])
             if attempt[0] == 2 and kind == "slippage":
                 raise MarketDataError("fixture outage")
             end = int(parse_qs(parsed.query)["to"][0])
+            if kind == "funding":
+                stamp[0] += timedelta(seconds=10)
             return payload(kind, end - 60)
 
         def pause(seconds):
@@ -113,6 +117,8 @@ class KrakenPerpetualMonitorTests(unittest.TestCase):
             target = Path(directory)
             report = observe(target, **kwargs)
             self.assertEqual((report["attempts"], report["successful"], report["failed"]), (3, 2, 1))
+            self.assertEqual(starts, [starts[0], starts[0] + timedelta(seconds=60),
+                                      starts[0] + timedelta(seconds=120)])
             self.assertEqual(report["estimated_adverse_slippage_bps"]["sell"]["10k"]["median_nearest_rank"], "100.00")
             self.assertTrue(report["raw_integrity_checked"])
             previous_calls = calls[0]

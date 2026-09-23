@@ -165,7 +165,10 @@ def observe(target, *, count, interval, until, adapter=None, clock=utcnow, pause
             if report["attempts"] < count:
                 remaining = (until - clock()).total_seconds()
                 if remaining > 0:
-                    pause(min(interval, remaining))
+                    elapsed = (clock() - attempted).total_seconds()
+                    if elapsed < 0:
+                        raise ValueError("Local clock moved backwards during observation")
+                    pause(min(max(0.0, interval - elapsed), remaining))
         report = summarize(db, status="completed")
         publish_summary(target / "summary.json", report)
         return report
