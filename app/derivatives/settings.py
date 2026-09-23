@@ -20,6 +20,7 @@ class DerivativeSettings:
     min_liquidation_buffer: Decimal = Decimal("0.02")
     max_position_notional: Decimal = Decimal("10000")
     fee_rate: Decimal = Decimal("0.0005")
+    spread_bps: Decimal = Decimal("0")
     slippage_bps: Decimal = Decimal("5")
     min_order_notional: Decimal = Decimal("10")
 
@@ -38,7 +39,12 @@ class DerivativeSettings:
             raise ValueError("Per-trade risk cannot exceed total risk")
         for name in ("max_position_notional", "min_order_notional"):
             positive_decimal(getattr(self, name), name)
-        for name in ("fee_rate", "slippage_bps"):
+        for name in ("fee_rate", "spread_bps", "slippage_bps"):
             positive_decimal(getattr(self, name), name, allow_zero=True)
-        if self.fee_rate >= 1 or self.slippage_bps >= 10000:
+        if self.fee_rate >= 1 or self.adverse_execution_bps >= 10000:
             raise ValueError("Simulation costs must remain below 100%")
+
+    @property
+    def adverse_execution_bps(self) -> Decimal:
+        """One side of the spread plus additional depth/slippage per fill."""
+        return self.spread_bps / Decimal("2") + self.slippage_bps

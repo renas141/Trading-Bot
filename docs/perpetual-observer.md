@@ -92,3 +92,11 @@ Der Kandidat verändert keinen Backtest und aktiviert weder PAPER noch LIVE. Er
 muss anschließend als vorab festgelegte Annahme in einem neuen Replay geprüft
 werden. Eine einzelne gute Minute, ein kurzer Lauf oder eine lückenhafte Messung
 wird technisch abgelehnt.
+
+Der Derivatekern besitzt dafür getrennte Felder: `spread_bps` enthält den ganzen
+beobachteten Geld-/Brief-Spread, `slippage_bps` die zusätzliche nachteilige
+Ausführung relativ zum besten Rand und `fee_rate` die separat belegte Gebühr.
+Bei jedem Einstieg und Ausstieg wird ein halber Spread plus Slippage gegen die
+Position gerechnet. Die Risikoprüfung verwendet exakt dieselbe Kostenformel wie
+der simulierte Broker. Dadurch wird der Spread weder vergessen noch doppelt
+gezählt.

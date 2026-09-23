@@ -71,6 +71,32 @@ class DerivativeTests(unittest.TestCase):
         self.assertLess(decision.entry_price, decision.stop_price)
         self.assertGreater(decision.liquidation_price, decision.stop_price)
 
+    def test_spread_and_slippage_are_separate_and_used_by_risk_and_broker(self):
+        contract = PerpetualContract(tick_size=D("0.01"))
+        settings = replace(
+            self.settings, contract=contract, spread_bps=D("20"), slippage_bps=D("10"),
+            max_margin_fraction=D("1"),
+        )
+        self.assertEqual(settings.adverse_execution_bps, D("20"))
+        signal = trade_signal(stop="90", target="120")
+        manager = LeveragedRiskManager(settings)
+        decision = manager.evaluate(signal, self.account, self.context)
+        self.assertTrue(decision.allowed)
+        self.assertEqual(decision.entry_price, D("100.20"))
+        self.assertEqual(decision.quantity, D("0.9633"))
+        self.assertEqual(decision.estimated_loss, D("0.9633") * D("10.38"))
+        broker = DerivativePaperBroker(settings)
+        broker.open_position(signal, decision, NOW)
+        trade = broker.close_position(D("110"), NOW, "TEST")
+        self.assertEqual(trade.exit_price, D("109.78"))
+        self.assertEqual(trade.net_pnl, D("0.9633") * D("9.58"))
+
+    def test_combined_spread_and_slippage_cannot_reach_one_hundred_percent(self):
+        with self.assertRaises(ValueError):
+            DerivativeSettings(spread_bps=D("2"), slippage_bps=D("9999"))
+        with self.assertRaises(ValueError):
+            DerivativeSettings(spread_bps=D("-1"))
+
     def test_long_funding_fee_and_pnl_reconcile_to_balance(self):
         settings = replace(self.settings, max_margin_fraction=D("1"))
         broker = DerivativePaperBroker(settings)

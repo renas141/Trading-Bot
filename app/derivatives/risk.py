@@ -55,13 +55,13 @@ class LeveragedRiskManager:
         self.settings = settings
 
     def _entry_fill(self, price: Decimal, direction: Direction) -> Decimal:
-        fraction = self.settings.slippage_bps / Decimal("10000")
+        fraction = self.settings.adverse_execution_bps / Decimal("10000")
         raw = price * (1 + fraction if direction == Direction.LONG else 1 - fraction)
         step = self.settings.contract.tick_size
         return ceil_step(raw, step) if direction == Direction.LONG else floor_step(raw, step)
 
     def _exit_fill(self, price: Decimal, direction: Direction) -> Decimal:
-        fraction = self.settings.slippage_bps / Decimal("10000")
+        fraction = self.settings.adverse_execution_bps / Decimal("10000")
         raw = price * (1 - fraction if direction == Direction.LONG else 1 + fraction)
         step = self.settings.contract.tick_size
         return floor_step(raw, step) if direction == Direction.LONG else ceil_step(raw, step)

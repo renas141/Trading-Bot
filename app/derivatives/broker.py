@@ -106,7 +106,7 @@ class DerivativePaperBroker:
         if position is None:
             raise ValueError("No derivative position")
         positive_decimal(reference, "reference_price")
-        fraction = self.settings.slippage_bps / Decimal("10000")
+        fraction = self.settings.adverse_execution_bps / Decimal("10000")
         step = self.settings.contract.tick_size
         if position.direction == Direction.LONG:
             return floor_step(reference * (1 - fraction), step)

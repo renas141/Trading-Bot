@@ -241,7 +241,9 @@ für Strategie- oder Profitabilitätsaussagen.
   Derivate-Backtest erlaubt dynamisch 1x bis maximal 10x. Er wählt nach der
   risikobasierten Positionsgröße den kleinsten nötigen Hebel und verlangt einen
   zusätzlichen Abstand zwischen Stop und Liquidation. Kurslücken können den
-  geplanten Stop-Verlust trotzdem überschreiten.
+  geplanten Stop-Verlust trotzdem überschreiten. Gebühren, ganzer Spread und
+  zusätzliche Slippage sind getrennte Annahmen; Risiko und Broker belasten je
+  Ausführung denselben halben Spread plus dieselbe nachteilige Slippage.
 - Python-Modulgrenzen sind keine Sandbox für fremden Strategiecode. Der Broker
   ist eine interne Schnittstelle, kein öffentlich zugänglicher Order-Endpunkt.
 
