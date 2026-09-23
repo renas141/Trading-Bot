@@ -2,13 +2,13 @@
 
 ## Ergebnis zuerst
 
-Es gibt derzeit **keine belastbar profitable Strategie und keine Handelsfreigabe**. Die getesteten Regeln schaffen den festgelegten Auswahltest mit normalen und erhöhten Kosten nicht. Die Ergebnisse sind rückblickende Entwicklungs- und Screeningtests auf bereits gesehenen Jahren; sie sind kein unabhängiger Nachweis für künftige Gewinne. 2025 wurde hinsichtlich Strategie-Performance weiterhin nicht ausgewertet.
+Es gibt derzeit **keine belastbar profitable Strategie und keine Handelsfreigabe**. Die getesteten Regeln schaffen den festgelegten Auswahltest mit normalen und erhöhten Kosten nicht. Die Ergebnisse sind rückblickende Entwicklungs- und Screeningtests; sie sind kein unabhängiger Nachweis für künftige Gewinne. Der 2025-Perpetual-Holdout ist in beiden Kostenfällen gescheitert; 2026-Perpetual-Kursdaten bleiben unangetastet.
 
 ## Was in der Nacht gebaut und geprüft wurde
 
 Die Datenprüfung für zwei zuvor leere 4-Stunden-Intervalle wurde mit öffentlichen Kraken-Einzeltrades belegt. Es wurden keine künstlichen Kerzen ergänzt: In den überprüften Intervallen ohne veröffentlichte Trades gibt es keine simulierten Ein- oder Ausstiege, offene Positionen und Risikozustände bleiben erhalten, und ein Stop kann erst am ersten belegten Folge-Trade reagieren. Ungeprüfte Lücken bleiben gesperrt.
 
-Danach wurden vier abgegrenzte Forschungsblöcke abgeschlossen: der 4-Stunden-Nettoziel-Filter, zwei langsamere Entwicklungshypothesen, die Übertragung fester Regeln auf eigene Bitvavo-Kurse sowie ein nachgezogener Stop. Zusammen liegen **68 abgeschlossene Forschungsläufe in sechs ausgewerteten Studien; zusätzlich ist der ursprünglich gesperrte Datenplan dokumentiert** vor. Die vollständige Suite ist mit **203 Tests grün**; zusätzlich wurden 106 Python-Quellen und das Dashboard-JavaScript syntaktisch geprüft. Die Datenbankergebnisse und SQLite-Integrität aller Läufe wurden abgeglichen.
+Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen **164 abgeschlossene Forschungsläufe in 14 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Suite ist mit **233 Tests grün**; Python-Quellen und Dashboard-JavaScript wurden zusätzlich syntaktisch geprüft. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
 
 ## Ergebnisvergleich
 
@@ -33,11 +33,17 @@ Der PAPER-Beobachter war ausdrücklich auf `no_trade` gestellt. In 140 Ereigniss
 
 **Beobachtung abgeschlossen:** Der Quote-Monitor erhielt 151 von 151 öffentlichen Beobachtungen erfolgreich und 0 Fehler zwischen 05:14:14 und 07:44:31 Berlin. Der Median-Spread lag bei 0,131621 Basispunkten (etwa 0,001316 %), das Maximum bei 0,394698 Basispunkten. Die kleinste sichtbare Ask-Notionalmenge betrug nur 7,67 EUR; ein kleiner angezeigter Spread ist deshalb kein Beleg für günstige Fills größerer Orders. Die Stichprobe ist kurz, hat keinen Exchange-Event-Zeitstempel und belegt weder typische noch historische Spreads.
 
+## Perpetual-Holdout und zusätzliche Grenzen
+
+Der zunächst positive Long-only-Entwicklungsfall scheiterte im einmaligen 2025-Holdout: **−19,06 USD normal und −34,40 USD im Stressfall bei jeweils 5 Trades**. Auch die nachgelagerten Regeln für Gewinnschutz, Zeit/Momentum, Wiedereinstiegspause und ATR-Trailing wurden nicht ausgewählt. Die klassische Donchian-Trendregel endete 2025 bei **−24,92 USD normal und −35,84 USD Stress bei 9 Trades**. Keine dieser Varianten ist für PAPER oder LIVE freigegeben.
+
+Das Modell unterstützt echte signierte Funding-Reihen, aber historische API-Reihen für 2023–2025 fehlen; dafür wurden nachteilige Funding-Sensitivitäten verwendet. 2026-Perpetual-Kursdaten wurden weder geladen noch ausgewertet. LIVE und Strategie-PAPER bleiben gesperrt. Der Stand ist lokal im Commit `7aa5a08` gesichert; ein Push war wegen fehlender GitHub-Anmeldung blockiert.
+
 ## Verbleibende Grenzen und nächste Schritte
 
-Die vorhandenen Auswahlverfahren und Gates wurden angewendet, aber von keinem Kandidaten bestanden. Es fehlt eine längerfristige Spread- und Liquiditätsmessung. Der Beobachtungsrunner funktioniert; eine Handelsstrategie ist für den Dauerbetrieb noch nicht freigegeben. OHLC-Daten sind nicht tickgenau; ein Stop garantiert keinen Ausführungskurs. 2025 bleibt bis zu einer neuen, vorab registrierten Hypothese und einem bestandenen Gate zurückgehalten.
+Die vorhandenen Auswahlverfahren und Gates wurden angewendet, aber von keinem Kandidaten bestanden. Es fehlt eine längerfristige Spread- und Liquiditätsmessung. Der Beobachtungsrunner funktioniert; eine Handelsstrategie ist für den Dauerbetrieb noch nicht freigegeben. OHLC-Daten sind nicht tickgenau; ein Stop garantiert keinen Ausführungskurs.
 
-1. Eine neue, begründete Hypothese vorab registrieren und 2025 genau einmal als Holdout prüfen, ausschließlich nach bestandenem Gate und ohne nachträgliche Regeländerung.
+1. Eine neue, begründete Hypothese vorab registrieren und erst nach bestandenem Gate auf späteren, unabhängigen Daten prüfen; keine nachträgliche Regeländerung.
 2. Über längere Zeit Spreads, sichtbare Liquidität und Datenfrische öffentlich beobachten, bevor ein Ergebnis auf größere Orders übertragen wird.
 3. Den Paper-Betrieb weiter als `no_trade` beobachten; eine Strategiefreigabe bleibt an unabhängige Daten-, Ausführungs- und Wiederaufnahmeprüfungen gebunden.
 
