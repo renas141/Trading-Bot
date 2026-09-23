@@ -21,6 +21,8 @@ implementierte profitable Handelsstrategie**.
 - Chronologischer Backtest mit Einstieg frühestens am nächsten Kerzenbeginn,
   Stop Loss, Take Profit, konservativer Behandlung mehrdeutiger Kerzen und Kennzahlen.
 - Öffentlicher Kraken-Spot-Download und Import offizieller OHLCVT-CSV-Dateien,
+- wiederaufnehmbare öffentliche Kraken-Perpetual-Kostenmessung für Spread,
+  geschätzte Slippage, Funding und Datenalter,
   inklusive Herkunft, SHA-256-Prüfsummen und Qualitätsbericht.
 - Prüfung auf Lücken und unvollständige Kerzen sowie chronologische Trennung
   in Entwicklungsdaten und spätere Holdout-Daten.
@@ -261,6 +263,8 @@ separaten Perpetual-Replay vorhanden, noch nicht im normalen Spot-PaperBroker.
 - Tickgenaue Backtest-Fills, Sharpe und Walk-Forward. Eine einfache zeitlich
   getrennte Holdout-Auswertung ist implementiert, noch keine breite Validierung.
 - WebSockets, historisch vollständige Funding-, Orderbook- und Open-Interest-Daten.
+  Eine begrenzte aktuelle [Perpetual-Kostenbeobachtung](docs/perpetual-observer.md)
+  ist vorhanden, ersetzt diese Historie aber nicht.
 - Dauerbetrieb, Wiederaufnahme bestehender Portfolios und parallele Handelsprozesse.
 - Machine Learning, LLM-Entscheidungen und externe kostenpflichtige Dienste.
 
@@ -319,8 +323,11 @@ Brokerpreise von den älteren Modellannahmen.
 1. **Weitere Forschung:** eine neue, strukturell begründete Hypothese ausschließlich
    auf den jetzt gesehenen Jahren 2023–2025 entwickeln und vor jedem Blick auf
    2026 unveränderlich festlegen.
-2. **Ausführungsdaten verbessern:** vollständige historische Funding-Sätze,
-   längere Quote-/Liquiditätsmessung und ein PAPER-Perpetual-Feed ergänzen.
+2. **Ausführungsdaten verbessern:** den neuen öffentlichen
+   [Perpetual-Beobachter](docs/perpetual-observer.md) über verschiedene
+   Tageszeiten und Marktphasen laufen lassen, konservative Kostenperzentile
+   festlegen, vollständige historische Funding-Sätze suchen und erst danach
+   einen PAPER-Perpetual-Feed ergänzen.
 3. **Brokerkonto prüfen:** EWR-Berechtigung, konkreten Marginplan, Collateral,
    minimale Ordergröße und API-Rechte lesend verifizieren; echte Orders bleiben gesperrt.
 

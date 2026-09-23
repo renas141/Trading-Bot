@@ -23,6 +23,14 @@ Die Daten stammen aus Krakens öffentlicher Futures-Charts-API. Trade- und Mark-
 
 Die normale Simulation verwendet 0,05 % Taker-Gebühr je Seite und 5 Basispunkte Slippage. Der Stressfall verwendet 0,10 % und 10 Basispunkte. Weil die öffentliche Funding-Historie für diese Jahre nicht vollständig verfügbar war, wurde Funding nie mit null angesetzt: normal wurden nachteilig 0,005 % pro vier Stunden berechnet, im Stress 0,02 %. Dies sind Sensitivitäten und keine rekonstruierten historischen Funding-Zahlungen.
 
+Für künftige Annahmen existiert nun zusätzlich ein
+[rein öffentlicher, wiederaufnehmbarer Kostenbeobachter](perpetual-observer.md).
+Er misst aktuelle Spreads, von Kraken geschätzte Ausführungspreise in vier
+Notionalstufen, vorzeichenbehaftetes Funding und das Alter der gemeinsamen
+Analytics-Minute. Rohantworten und Prüfsummen bleiben erhalten. Ein einzelner
+erfolgreicher Funktionstest belegt die Messkette, liefert aber noch keine
+repräsentativen Kosten und verändert keine abgeschlossene Studie.
+
 Offizielle Quellen:
 
 - [Kraken Futures Candle API](https://docs.kraken.com/api/docs/futures-api/charts/candles)
