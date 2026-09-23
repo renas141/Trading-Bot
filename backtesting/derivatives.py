@@ -10,6 +10,7 @@ from app.derivatives.models import DerivativeTrade
 from app.derivatives.risk import DerivativeRiskContext, LeveragedRiskManager, ceil_step, floor_step
 from app.derivatives.settings import DerivativeSettings
 from app.domain import Direction
+from app.indicators.core import average_true_range
 from app.market_data.models import Candle
 from app.market_data.quality import require_complete
 from app.strategies.base import Strategy
@@ -61,6 +62,43 @@ class ProfitProtection:
         if (not isinstance(self.trigger_r, Decimal) or not isinstance(self.locked_r, Decimal)
                 or self.trigger_r <= 0 or self.locked_r < 0 or self.locked_r >= self.trigger_r):
             raise ValueError("Profit protection requires 0 <= locked R < trigger R")
+
+
+@dataclass(frozen=True)
+class CloseExitPolicy:
+    """Close-confirmed management exit, submitted for the next candle open."""
+
+    max_holding_bars: int | None = None
+    momentum_lookback: int | None = None
+    minimum_holding_bars: int = 1
+
+    def __post_init__(self) -> None:
+        if self.max_holding_bars is None and self.momentum_lookback is None:
+            raise ValueError("An exit policy needs a time or momentum rule")
+        for name in ("max_holding_bars", "momentum_lookback"):
+            value = getattr(self, name)
+            if value is not None and (type(value) is not int or value < 2):
+                raise ValueError(f"{name} must be an integer of at least two")
+        if type(self.minimum_holding_bars) is not int or self.minimum_holding_bars < 1:
+            raise ValueError("minimum_holding_bars must be a positive integer")
+        if (self.momentum_lookback is not None
+                and self.minimum_holding_bars < self.momentum_lookback):
+            raise ValueError("Momentum exits need at least one full lookback window")
+
+
+@dataclass(frozen=True)
+class TrailingStopPolicy:
+    """Highest/lowest completed close minus/plus a fixed ATR multiple."""
+
+    atr_period: int
+    atr_multiple: Decimal
+
+    def __post_init__(self) -> None:
+        if type(self.atr_period) is not int or self.atr_period < 2:
+            raise ValueError("Trailing ATR period must be an integer of at least two")
+        if (not isinstance(self.atr_multiple, Decimal) or not self.atr_multiple.is_finite()
+                or self.atr_multiple <= 0):
+            raise ValueError("Trailing ATR multiple must be a positive finite Decimal")
 
 
 class _RiskState:
@@ -117,20 +155,34 @@ class DerivativeBacktester:
 
     def __init__(self, strategy: Strategy, settings: DerivativeSettings,
                  funding_rate_per_bar: Decimal,
-                 profit_protection: ProfitProtection | None = None) -> None:
+                 profit_protection: ProfitProtection | None = None,
+                 close_exit_policy: CloseExitPolicy | None = None,
+                 reentry_cooldown_bars: int = 0,
+                 trailing_stop_policy: TrailingStopPolicy | None = None) -> None:
         if not isinstance(funding_rate_per_bar, Decimal) or funding_rate_per_bar < 0:
             raise ValueError("Funding sensitivity must be a non-negative Decimal")
         self.strategy = strategy
         self.settings = settings
         self.funding_rate_per_bar = funding_rate_per_bar
         self.profit_protection = profit_protection
+        self.close_exit_policy = close_exit_policy
+        self.trailing_stop_policy = trailing_stop_policy
+        if type(reentry_cooldown_bars) is not int or reentry_cooldown_bars < 0:
+            raise ValueError("Re-entry cooldown must be a non-negative integer")
+        self.reentry_cooldown_bars = reentry_cooldown_bars
 
     def run(self, trade_candles: Sequence[Candle], mark_candles: Sequence[Candle], *,
-            warmup: Sequence[Candle] = ()) -> DerivativeReplayResult:
+            warmup: Sequence[Candle] = (),
+            funding_rates: Sequence[Decimal] | None = None) -> DerivativeReplayResult:
         require_complete(trade_candles)
         require_complete(mark_candles)
         if tuple(c.timestamp for c in trade_candles) != tuple(c.timestamp for c in mark_candles):
             raise ValueError("Trade and mark candles must be aligned")
+        if funding_rates is not None:
+            if len(funding_rates) != len(trade_candles):
+                raise ValueError("Historical funding rates must align with evaluation candles")
+            if any(not isinstance(rate, Decimal) or not rate.is_finite() for rate in funding_rates):
+                raise ValueError("Historical funding rates must be finite Decimals")
         if warmup:
             require_complete(warmup)
             if warmup[-1].closed_at != trade_candles[0].timestamp:
@@ -143,10 +195,16 @@ class DerivativeBacktester:
         entries = rejected = signals = 0
         stop_updates = 0
         initial_stops: dict[str, Decimal] = {}
+        opened_at_index: dict[str, int] = {}
+        trailing_anchor: dict[str, Decimal] = {}
+        pending_management_exit: tuple[str, str] | None = None
+        last_exit_index: int | None = None
         observed = tuple(warmup) + tuple(trade_candles)
 
         def close(reference: Decimal, at: datetime, reason: str, liquidation: bool = False) -> None:
+            nonlocal last_exit_index
             broker.close_position(reference, at, reason, liquidation=liquidation)
+            last_exit_index = index
 
         for index, (trade, mark) in enumerate(zip(trade_candles, mark_candles)):
             at_open = trade.timestamp
@@ -168,17 +226,30 @@ class DerivativeBacktester:
                 elif target_gap:
                     close(position.take_profit_price, at_open, "TAKE_PROFIT_GAP")
 
+            position = broker.snapshot(mark.open).position
+            if (position is not None and pending_management_exit is not None
+                    and pending_management_exit[0] == position.id):
+                close(trade.open, at_open, pending_management_exit[1])
+            pending_management_exit = None
+
             if pending is not None and pending.direction in (Direction.LONG, Direction.SHORT):
                 signals += 1
-                account = broker.snapshot(mark.open)
-                context = state.observe(trade.open, at_open, account.equity)
-                decision = risk.evaluate(pending, account, context)
-                if decision.allowed:
-                    opened = broker.open_position(pending, decision, at_open)
-                    initial_stops[opened.id] = opened.stop_price
-                    entries += 1
-                else:
+                cooling_down = (self.reentry_cooldown_bars > 0 and last_exit_index is not None
+                                and index - last_exit_index <= self.reentry_cooldown_bars)
+                if cooling_down:
                     rejected += 1
+                else:
+                    account = broker.snapshot(mark.open)
+                    context = state.observe(trade.open, at_open, account.equity)
+                    decision = risk.evaluate(pending, account, context)
+                    if decision.allowed:
+                        opened = broker.open_position(pending, decision, at_open)
+                        initial_stops[opened.id] = opened.stop_price
+                        opened_at_index[opened.id] = index
+                        trailing_anchor[opened.id] = opened.entry_price
+                        entries += 1
+                    else:
+                        rejected += 1
 
             position = broker.snapshot(mark.open).position
             if position is not None:
@@ -199,10 +270,14 @@ class DerivativeBacktester:
                     close(position.take_profit_price, end_at, "TAKE_PROFIT")
 
             position = broker.snapshot(mark.close).position
-            if position is not None and self.funding_rate_per_bar:
-                adverse_rate = (self.funding_rate_per_bar if position.direction == Direction.LONG
-                                else -self.funding_rate_per_bar)
-                broker.apply_funding(adverse_rate, mark.close)
+            if position is not None:
+                if funding_rates is None:
+                    rate = (self.funding_rate_per_bar if position.direction == Direction.LONG
+                            else -self.funding_rate_per_bar)
+                else:
+                    rate = funding_rates[index]
+                if rate:
+                    broker.apply_funding(rate, mark.close)
 
             position = broker.snapshot(mark.close).position
             if position is not None and self.profit_protection is not None:
@@ -222,6 +297,52 @@ class DerivativeBacktester:
                 if triggered and tighter:
                     broker.tighten_stop(proposed)
                     stop_updates += 1
+
+            position = broker.snapshot(mark.close).position
+            policy = self.close_exit_policy
+            if position is not None and policy is not None:
+                bars_held = index - opened_at_index[position.id] + 1
+                reason = None
+                if policy.max_holding_bars is not None and bars_held >= policy.max_holding_bars:
+                    reason = "TIME_EXIT"
+                lookback = policy.momentum_lookback
+                if reason is None and lookback is not None and bars_held >= policy.minimum_holding_bars:
+                    history_end = len(warmup) + index + 1
+                    closes = [c.close for c in observed[history_end - lookback:history_end]]
+                    average = sum(closes, Decimal("0")) / Decimal(lookback)
+                    failed = ((position.direction == Direction.LONG
+                               and trade.close < position.entry_price and trade.close < average)
+                              or (position.direction == Direction.SHORT
+                                  and trade.close > position.entry_price and trade.close > average))
+                    if failed:
+                        reason = "MOMENTUM_EXIT"
+                if reason is not None:
+                    pending_management_exit = (position.id, reason)
+
+            position = broker.snapshot(mark.close).position
+            trailing = self.trailing_stop_policy
+            if position is not None and trailing is not None:
+                history_end = len(warmup) + index + 1
+                history = observed[:history_end]
+                anchor = trailing_anchor[position.id]
+                if position.direction == Direction.LONG:
+                    anchor = max(anchor, trade.close)
+                else:
+                    anchor = min(anchor, trade.close)
+                trailing_anchor[position.id] = anchor
+                if len(history) >= trailing.atr_period + 1:
+                    atr = average_true_range(history, trailing.atr_period)
+                    if position.direction == Direction.LONG:
+                        proposed = floor_step(anchor - atr * trailing.atr_multiple,
+                                              self.settings.contract.tick_size)
+                        tighter = proposed > position.stop_price
+                    else:
+                        proposed = ceil_step(anchor + atr * trailing.atr_multiple,
+                                             self.settings.contract.tick_size)
+                        tighter = proposed < position.stop_price
+                    if proposed > 0 and tighter:
+                        broker.tighten_stop(proposed)
+                        stop_updates += 1
             account = broker.mark(mark.close)
             end_at = trade.closed_at - timedelta(microseconds=1)
             state.observe(trade.close, end_at, account.equity)

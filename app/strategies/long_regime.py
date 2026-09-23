@@ -33,3 +33,20 @@ class LongOnlyRegimeStrategy(Strategy):
                 "SHORT suppressed by the preregistered long-only structural-bias hypothesis.",
             ),
         )
+
+
+class UncappedLongOnlyRegimeStrategy(LongOnlyRegimeStrategy):
+    """Same fixed entry and initial stop, with profit-taking delegated to an exit policy."""
+
+    name = "uncapped_long_only_regime_breakout_perpetual"
+    version = "0.1.0"
+
+    def analyze(self, history: Sequence[Candle]) -> Signal:
+        signal = super().analyze(history)
+        return replace(
+            signal,
+            take_profit_price=None,
+            strategy=self.name,
+            strategy_version=self.version,
+            reasons=signal.reasons + ("No fixed target; a separate trailing policy manages exits.",),
+        )

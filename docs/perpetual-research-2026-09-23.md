@@ -26,6 +26,7 @@ Die normale Simulation verwendet 0,05 % Taker-Gebühr je Seite und 5 Basispunkte
 Offizielle Quellen:
 
 - [Kraken Futures Candle API](https://docs.kraken.com/api/docs/futures-api/charts/candles)
+- [Kraken Futures Market Analytics](https://docs.kraken.com/api/docs/futures-api/charts/market-analytics)
 - [Kraken Derivatives Gebühren](https://support.kraken.com/articles/360048917612-fee-schedule)
 - [Kraken Derivate-Margin und maximaler Hebel](https://support.kraken.com/de/articles/360022632452-derivatives-margin-schedule-maximum-leverage)
 - [Kraken Derivatives Teilnahmevoraussetzungen für EWR-Kunden](https://support.kraken.com/de/articles/derivatives-eligibility-requirements-eea)
@@ -76,6 +77,84 @@ Die Diagnose zeigte zwei spätere Verlusttrades, die zuvor ungefähr +2,58R bezi
 | +1R sichern nach +2R | +46,82 USD | +15,52 USD | +1,72 USD | −9,72 USD | nein |
 
 Beide Regeln verbesserten 2025 deutlich und senkten Funding sowie Drawdown. Keine war jedoch in allen drei Jahren unter normalen und verschärften Annahmen positiv. Das festgelegte Auswahlverfahren lieferte deshalb keinen Kandidaten. 2026 wurde nicht heruntergeladen oder ausgewertet und bleibt für eine spätere, wirklich neue Hypothese verfügbar.
+
+## Zeit-, Momentum- und Wiedereinstiegsprüfung
+
+Als nächste begrenzte Hypothese wurden genau zwei Ausstiege vorab festgelegt. Der
+erste schließt nach 60 Vierstunden-Kerzen, also zehn Tagen. Der zweite schließt
+einen Verlusttrade nach frühestens 18 Kerzen, wenn der Schlusskurs zusätzlich
+unter seinem 18-Kerzen-Mittel liegt. Die Entscheidung verwendet nur einen
+abgeschlossenen Schlusskurs; ausgeführt wird mit Kosten und Slippage am nächsten
+Eröffnungskurs.
+
+| Regel | 2023 Stress | 2024 Stress | 2025 normal | 2025 Stress | Auswahl |
+| --- | ---: | ---: | ---: | ---: | --- |
+| unverändertes 3R-Ziel | +39,68 USD | +15,52 USD | −19,06 USD | −34,40 USD | nein |
+| Ausstieg nach zehn Tagen | +47,72 USD | +15,52 USD | −4,26 USD | −17,50 USD | nein |
+| Verlust plus schwaches 3-Tage-Momentum | +40,15 USD | +28,07 USD | −35,84 USD | −40,10 USD | nein |
+
+Der feste Zeitausstieg half, blieb aber 2025 in beiden Kostenfällen negativ. Der
+Momentum-Ausstieg verschlechterte 2025. Daher wurde keiner ausgewählt.
+
+Die anschließende Diagnose zeigte eine unmittelbare Wiedereinstiegsfolge nach dem
+einzigen 2025-Gewinner. Daraufhin wurde genau eine eintägige Pause von sechs
+Vierstunden-Kerzen allein und zusammen mit dem bereits festgelegten Zeitausstieg
+geprüft. Auch diese Regel war nicht stabil:
+
+| Regel | 2023 Stress | Trades 2023 | 2024 Stress | 2025 Stress | Auswahl |
+| --- | ---: | ---: | ---: | ---: | --- |
+| eintägige Pause | +51,16 USD | 2 | −18,30 USD | −25,70 USD | nein |
+| Pause plus Zeitausstieg | +51,16 USD | 2 | −18,30 USD | −25,70 USD | nein |
+
+Die Pause entfernte 2023 zu viele Trades und machte 2024 negativ. Das auffällige
+2025-Muster war damit keine robuste allgemeine Regel. Weitere kleine Reparaturen
+an derselben Strategie sind nicht gerechtfertigt; der nächste Versuch muss die
+Einstiegslogik strukturell ändern und mehr unabhängige Marktphasen einbeziehen.
+
+Der Replay kann inzwischen echte vorzeichenbehaftete stündliche Funding-Reihen
+einlesen und lückenlos auf Vierstunden-Kerzen ausrichten. Krakens öffentlicher
+Analytics-Endpunkt lieferte bei der Prüfung aktuelle Werte, für die benötigten
+Jahre 2023 und 2025 jedoch leere Reihen. Fehlende Stunden werden technisch
+abgelehnt und niemals als null interpretiert. Die abgeschlossenen historischen
+Vergleiche verwenden deshalb weiterhin die oben genannten nachteiligen
+Funding-Sensitivitäten. Beim Formatcheck wurden keine 2026-Kursdaten geladen oder
+ausgewertet.
+
+## Strukturelle Trendfolge-Versuche
+
+Nach den fehlgeschlagenen lokalen Reparaturen wurde das feste 3R-Gewinnziel
+entfernt. Die erste strukturelle Variante behielt alle bisherigen Einstiegsfilter,
+ließ Gewinne aber mit einem nur enger werdenden Stop laufen: höchster
+abgeschlossener Schlusskurs seit Einstieg minus dreifacher einfacher ATR(42).
+
+| Variante | 2023 Stress | Trades 2023 | 2024 Stress | 2025 normal | 2025 Stress |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| gefilterter Einstieg, ATR-Trailing | +25,34 USD | 2 | +12,70 USD | −14,62 USD | −21,12 USD |
+
+Die Variante blieb 2023/2024 positiv und verbesserte 2025, war dort aber weiter
+negativ. Mit nur zwei abgeschlossenen Trades im Jahr 2023 verfehlte sie zusätzlich
+die Mindestzahl. Es gab keine Auswahl.
+
+Als letzte vorab festgelegte Einstiegshypothese wurde eine einfachere klassische
+Regel geprüft: steigender 100-Tage-Mittelwert, Ausbruch über das Hoch der letzten
+20 Tage, 3-ATR-Anfangsstop und derselbe Ziel-unbegrenzte ATR-Trailing-Stop. Die
+bisherigen Effizienz-, Volumen- und ATR-Prozentfilter entfielen vollständig.
+
+| Jahr | Normal | Stress | Trades | Befund |
+| --- | ---: | ---: | ---: | --- |
+| 2023 | +17,40 USD | +9,48 USD | 5 | positiv |
+| 2024 | +12,40 USD | +1,69 USD | 8 | knapp positiv |
+| 2025 | −24,92 USD | −35,84 USD | 9 | negativ |
+
+Mehr Signale lösten das Kernproblem nicht. Der Kandidat scheiterte 2025 in beiden
+Kostenfällen und wurde nicht ausgewählt. Nach mehreren klar begrenzten Versuchen
+wird die Suche auf 2023–2025 beendet. Weitere Varianten auf denselben Daten würden
+das Risiko einer zufälligen Anpassung erhöhen, ohne neue Evidenz zu liefern.
+
+Krakens älterer inverser BTC/USD-Perpetual besitzt Kurshistorie ab 2020. Er wurde
+nicht als Ersatz-Backtest verwendet, weil P&L, Kontraktgröße und Besicherung anders
+funktionieren als beim linearen Zielprodukt. Ein scheinbar linearer Replay hätte
+unbelegte Genauigkeit vorgetäuscht.
 
 ## Brokerentscheidung
 

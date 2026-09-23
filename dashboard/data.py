@@ -61,6 +61,10 @@ class ResearchStore:
                     "perpetual-long-bias-development-v2": ("Perpetual: Long-only-Filter", "Entwicklung 2023–2024"),
                     "perpetual-long-bias-holdout-v1": ("Perpetual: Long-only-Holdout", "Einmaliger Holdout 2025"),
                     "perpetual-profit-protection-development-v1": ("Perpetual: Gewinnschutz", "Entwicklung 2023–2025"),
+                    "perpetual-close-exit-development-v1": ("Perpetual: Zeit- und Momentum-Ausstieg", "Entwicklung 2023–2025"),
+                    "perpetual-reentry-development-v1": ("Perpetual: Wiedereinstiegspause", "Entwicklung 2023–2025"),
+                    "perpetual-atr-trailing-development-v1": ("Perpetual: ATR-Trailing", "Entwicklung 2023–2025"),
+                    "perpetual-donchian-trend-development-v1": ("Perpetual: klassischer Donchian-Trend", "Entwicklung 2023–2025"),
                 }
                 if version in derivative_versions:
                     receipt = read_json(self.contained(folder / "completion.json"))

@@ -292,7 +292,18 @@ einmaligen 2025-Holdout. Der ausgewählte Long-only-Kandidat war 2023/2024 posit
 scheiterte 2025 aber mit −1,91 % normal und −3,44 % im Stress. Er wurde deshalb
 nicht für PAPER oder LIVE freigegeben. Zwei danach festgelegte Gewinnschutzregeln
 verbesserten 2025 deutlich, blieben im Stress aber negativ; auch daraus wurde kein
-Kandidat ausgewählt. 2026 ist für diese Forschungsfolge noch unberührt.
+Kandidat ausgewählt. Ein fester 10-Tage-Ausstieg verbesserte den 2025-Stressfall
+anschließend von −34,40 USD auf −17,50 USD, bestand aber ebenfalls nicht. Ein
+Momentum-Ausstieg und eine eintägige Wiedereinstiegspause waren jahrübergreifend
+instabil. Auch daraus wurde kein Kandidat ausgewählt. Der Replay unterstützt nun
+echte stündliche Funding-Reihen; fehlende Stunden werden abgelehnt. Für 2023–2025
+bleiben konservative Funding-Sensitivitäten nötig, weil der öffentliche
+Analytics-Abruf dort keine vollständige Historie lieferte. 2026-Kursdaten wurden
+für diese Forschungsfolge weiterhin nicht ausgewertet. Zwei strukturell andere
+Trendfolge-Varianten mit unbegrenztem Gewinnziel und ATR-Trailing wurden ebenfalls
+vorab festgelegt. Der einfache Donchian-Ansatz erhöhte die Zahl der Trades und war
+2023/2024 positiv, scheiterte 2025 aber mit −24,92 USD normal und −35,84 USD im
+Stress. Die Parametersuche auf den gesehenen Jahren ist damit beendet.
 
 Die [dritte Hypothese auf 4-Stunden-Kerzen](docs/slow-research.md) ist vorab
 festgelegt. Der neue Downloader liest gezielt BTC/EUR aus dem vollständigen
