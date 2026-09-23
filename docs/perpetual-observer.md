@@ -100,3 +100,10 @@ Bei jedem Einstieg und Ausstieg wird ein halber Spread plus Slippage gegen die
 Position gerechnet. Die Risikoprüfung verwendet exakt dieselbe Kostenformel wie
 der simulierte Broker. Dadurch wird der Spread weder vergessen noch doppelt
 gezählt.
+
+Vor einem neuen Replay lädt `load_observed_cost_scenario` Kandidat und
+Quellzusammenfassung gemeinsam. Es berechnet die gesamte Kalibrierung erneut,
+vergleicht die Dateien und ihre SHA-256-Bindung und verlangt eine separat
+angegebene Gebührenquelle. Erst dann entstehen `DerivativeSettings` mit getrenntem
+Spread, Slippage und Gebühr sowie die nachteilige Funding-Sensitivität. Der Lader
+besitzt keinen PAPER- oder LIVE-Pfad.
