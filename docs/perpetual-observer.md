@@ -71,9 +71,24 @@ Quelle: [Kraken Futures Market Analytics](https://docs.kraken.com/api/docs/futur
 
 ## Freigaberegel
 
-Die Messwerte fließen noch nicht automatisch in eine Strategie ein. Dafür ist
-zuerst ein längerer, zusammenhängender Lauf über unterschiedliche Tageszeiten
-und Marktphasen nötig. Anschließend wird ein konservatives Kostenmodell aus hohen
-beobachteten Perzentilen festgelegt und ausschließlich im Replay sowie später in
-einem getrennten Paper-Perpetual-Feed verwendet. Der Beobachter allein aktiviert
-weder PAPER noch LIVE.
+Die Messwerte fließen nicht automatisch in eine Strategie ein. Der getrennte
+Kalibrierungsschritt verlangt mindestens 360 erfolgreiche Minuten über wenigstens
+sechs Stunden, höchstens 5 % Fehler, höchstens 180 Sekunden Abstand zwischen
+erfolgreichen Proben, frische Analytics-Zeitstempel und gültige Rohdatenprüfsummen.
+Er verwendet für das zum derzeitigen 1.000-USD-Konto und maximal 10x Hebel passende
+10.000-USD-Notional den höheren 95.-Perzentil-Wert aus Kauf und Verkauf. Für die
+Funding-Sensitivität wird der betragsmäßig ungünstigste beobachtete Stundenwert
+vierfach angesetzt. Gebühren werden absichtlich nicht geraten.
+
+Nach einem vollständig bestandenen Lauf wird nur ein neuer Kostenkandidat erzeugt:
+
+```bash
+.venv/bin/python -m app.market_data.perpetual_cost_calibration \
+  --summary data/evidence/perpetual-costs-20260924/summary.json \
+  --output data/evidence/perpetual-costs-20260924/cost-candidate.json
+```
+
+Der Kandidat verändert keinen Backtest und aktiviert weder PAPER noch LIVE. Er
+muss anschließend als vorab festgelegte Annahme in einem neuen Replay geprüft
+werden. Eine einzelne gute Minute, ein kurzer Lauf oder eine lückenhafte Messung
+wird technisch abgelehnt.

@@ -8,7 +8,7 @@ Es gibt derzeit **keine belastbar profitable Strategie und keine Handelsfreigabe
 
 Die Datenprüfung für zwei zuvor leere 4-Stunden-Intervalle wurde mit öffentlichen Kraken-Einzeltrades belegt. Es wurden keine künstlichen Kerzen ergänzt: In den überprüften Intervallen ohne veröffentlichte Trades gibt es keine simulierten Ein- oder Ausstiege, offene Positionen und Risikozustände bleiben erhalten, und ein Stop kann erst am ersten belegten Folge-Trade reagieren. Ungeprüfte Lücken bleiben gesperrt.
 
-Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen **164 abgeschlossene Forschungsläufe in 14 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Suite ist mit **238 Tests grün**; Python-Quellen und Dashboard-JavaScript wurden zusätzlich syntaktisch geprüft. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
+Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen **164 abgeschlossene Forschungsläufe in 14 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Suite ist mit **240 Tests grün**; Python-Quellen und Dashboard-JavaScript wurden zusätzlich syntaktisch geprüft. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
 
 ## Ergebnisvergleich
 
@@ -39,7 +39,10 @@ bei 10.000 USD rund 0,338 Basispunkte zusätzliche Kauf- und 0,262 Basispunkte
 Verkaufsslippage. Bei einer Million USD waren es rund 1,330 beziehungsweise
 2,543 Basispunkte. Der gemeinsame Kraken-Zeitstempel, Funding, Rohantworten und
 Prüfsummen wurden gespeichert. Diese eine Minute prüft die Technik, nicht die
-Repräsentativität der Werte.
+Repräsentativität der Werte. Eine zusätzliche Kalibrierungssperre verlangt
+mindestens 360 erfolgreiche Minuten über sechs Stunden, geringe Ausfälle und
+frische lückenarme Daten, bevor überhaupt ein nicht aktivierender
+Kostenkandidat erzeugt werden kann.
 
 ## Perpetual-Holdout und zusätzliche Grenzen
 

@@ -22,7 +22,8 @@ implementierte profitable Handelsstrategie**.
   Stop Loss, Take Profit, konservativer Behandlung mehrdeutiger Kerzen und Kennzahlen.
 - Öffentlicher Kraken-Spot-Download und Import offizieller OHLCVT-CSV-Dateien,
 - wiederaufnehmbare öffentliche Kraken-Perpetual-Kostenmessung für Spread,
-  geschätzte Slippage, Funding und Datenalter,
+  geschätzte Slippage, Funding und Datenalter mit Mindestabdeckung vor jeder
+  Kostenkalibrierung,
   inklusive Herkunft, SHA-256-Prüfsummen und Qualitätsbericht.
 - Prüfung auf Lücken und unvollständige Kerzen sowie chronologische Trennung
   in Entwicklungsdaten und spätere Holdout-Daten.
