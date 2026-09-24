@@ -67,6 +67,10 @@ relative Funding-Wert war positiv bei `0.000004444079166667`. Diese einzelne
 Minute bestätigt nur die technische Messkette. Sie ist weder eine typische
 Kostenannahme noch ein Profitabilitätsnachweis.
 
+Der anschließende Achtstundenlauf mit 480 Versuchen ist abgeschlossen und hat das
+technische Kalibrierungstor bestanden. Ergebnisse, Prüfsummen und Grenzen stehen
+im [Kostenbericht vom 24.09.2026](perpetual-cost-observation-2026-09-24.md).
+
 Quelle: [Kraken Futures Market Analytics](https://docs.kraken.com/api/docs/futures-api/charts/market-analytics).
 
 ## Freigaberegel

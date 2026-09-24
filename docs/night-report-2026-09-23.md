@@ -8,7 +8,7 @@ Es gibt derzeit **keine belastbar profitable Strategie und keine Handelsfreigabe
 
 Die Datenprüfung für zwei zuvor leere 4-Stunden-Intervalle wurde mit öffentlichen Kraken-Einzeltrades belegt. Es wurden keine künstlichen Kerzen ergänzt: In den überprüften Intervallen ohne veröffentlichte Trades gibt es keine simulierten Ein- oder Ausstiege, offene Positionen und Risikozustände bleiben erhalten, und ein Stop kann erst am ersten belegten Folge-Trade reagieren. Ungeprüfte Lücken bleiben gesperrt.
 
-Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen **164 abgeschlossene Forschungsläufe in 14 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Suite ist mit **240 Tests grün**; Python-Quellen und Dashboard-JavaScript wurden zusätzlich syntaktisch geprüft. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
+Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen **164 abgeschlossene Forschungsläufe in 14 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Suite ist mit **244 Tests grün**; Python-Quellen und Dashboard-JavaScript wurden zusätzlich syntaktisch geprüft. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
 
 ## Ergebnisvergleich
 
@@ -44,18 +44,25 @@ mindestens 360 erfolgreiche Minuten über sechs Stunden, geringe Ausfälle und
 frische lückenarme Daten, bevor überhaupt ein nicht aktivierender
 Kostenkandidat erzeugt werden kann.
 
+**Perpetual-Beobachtung abgeschlossen:** 477 von 480 Versuchen waren über knapp
+acht Stunden erfolgreich; die Fehlerquote betrug 0,625 %. Das Spread-p95 lag bei
+0,119 Basispunkten. Für 10.000 USD lagen die Slippage-p95 bei 0,683 Basispunkten
+im Kauf und 0,736 im Verkauf. Das Gate für einen nicht aktivierenden
+Kostenkandidaten bestand. Die vollständige Auswertung steht im
+[Kostenbericht](perpetual-cost-observation-2026-09-24.md).
+
 ## Perpetual-Holdout und zusätzliche Grenzen
 
 Der zunächst positive Long-only-Entwicklungsfall scheiterte im einmaligen 2025-Holdout: **−19,06 USD normal und −34,40 USD im Stressfall bei jeweils 5 Trades**. Auch die nachgelagerten Regeln für Gewinnschutz, Zeit/Momentum, Wiedereinstiegspause und ATR-Trailing wurden nicht ausgewählt. Die klassische Donchian-Trendregel endete 2025 bei **−24,92 USD normal und −35,84 USD Stress bei 9 Trades**. Keine dieser Varianten ist für PAPER oder LIVE freigegeben.
 
-Das Modell unterstützt echte signierte Funding-Reihen, aber historische API-Reihen für 2023–2025 fehlen; dafür wurden nachteilige Funding-Sensitivitäten verwendet. 2026-Perpetual-Kursdaten wurden weder geladen noch ausgewertet. LIVE und Strategie-PAPER bleiben gesperrt. Der Stand ist lokal in Git gesichert; ein Push war wegen fehlender GitHub-Anmeldung blockiert.
+Das Modell unterstützt echte signierte Funding-Reihen, aber historische API-Reihen für 2023–2025 fehlen; dafür wurden nachteilige Funding-Sensitivitäten verwendet. 2026-Perpetual-Kursdaten wurden weder geladen noch ausgewertet. LIVE und Strategie-PAPER bleiben gesperrt. Der GitHub-Zugriff ist inzwischen repositorygebunden eingerichtet und der Stand auf `main` gesichert.
 
 ## Verbleibende Grenzen und nächste Schritte
 
-Die vorhandenen Auswahlverfahren und Gates wurden angewendet, aber von keinem Kandidaten bestanden. Der neue Perpetual-Beobachter funktioniert; es fehlt weiterhin eine längerfristige Messung über unterschiedliche Marktphasen. Eine Handelsstrategie ist für den Dauerbetrieb noch nicht freigegeben. OHLC-Daten sind nicht tickgenau; ein Stop garantiert keinen Ausführungskurs.
+Die vorhandenen Auswahlverfahren und Gates wurden angewendet, aber von keinem Strategiekandidaten bestanden. Der erste achtstündige Perpetual-Kostenlauf und sein Kalibrierungstor sind abgeschlossen; weitere Marktphasen fehlen weiterhin. Eine Handelsstrategie ist für den Dauerbetrieb noch nicht freigegeben. OHLC-Daten sind nicht tickgenau; ein Stop garantiert keinen Ausführungskurs.
 
 1. Eine neue, begründete Hypothese vorab registrieren und erst nach bestandenem Gate auf späteren, unabhängigen Daten prüfen; keine nachträgliche Regeländerung.
-2. Den Perpetual-Kostenbeobachter über längere Zeit und verschiedene Tageszeiten laufen lassen, danach konservative hohe Kostenperzentile festlegen.
+2. Den bestandenen Kostenkandidaten in einer neuen vorab registrierten Replay-Studie verwenden und zusätzliche Beobachtungen über andere Tages-, Wochenend- und Volatilitätsphasen sammeln.
 3. Den Paper-Betrieb weiter als `no_trade` beobachten; eine Strategiefreigabe bleibt an unabhängige Daten-, Ausführungs- und Wiederaufnahmeprüfungen gebunden.
 
 Die automatische Freigabeprüfung lehnte die geplante Umstellung auf einen Abschluss um 07:50 Uhr wegen des erreichten Nutzungslimits ab. Der Abschlussbericht wurde deshalb verspätet finalisiert.

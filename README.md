@@ -326,11 +326,12 @@ Brokerpreise von den älteren Modellannahmen.
 1. **Weitere Forschung:** eine neue, strukturell begründete Hypothese ausschließlich
    auf den jetzt gesehenen Jahren 2023–2025 entwickeln und vor jedem Blick auf
    2026 unveränderlich festlegen.
-2. **Ausführungsdaten verbessern:** den neuen öffentlichen
-   [Perpetual-Beobachter](docs/perpetual-observer.md) über verschiedene
-   Tageszeiten und Marktphasen laufen lassen, konservative Kostenperzentile
-   festlegen, vollständige historische Funding-Sätze suchen und erst danach
-   einen PAPER-Perpetual-Feed ergänzen.
+2. **Ausführungsdaten verbessern:** der erste achtstündige
+   [Perpetual-Kostenlauf](docs/perpetual-cost-observation-2026-09-24.md) hat das
+   technische Gate bestanden. Den konservativen Kandidaten in einer neuen
+   vorab registrierten Studie einsetzen, weitere Marktphasen messen,
+   vollständige historische Funding-Sätze suchen und erst danach einen
+   PAPER-Perpetual-Feed ergänzen.
 3. **Brokerkonto prüfen:** EWR-Berechtigung, konkreten Marginplan, Collateral,
    minimale Ordergröße und API-Rechte lesend verifizieren; echte Orders bleiben gesperrt.
 
