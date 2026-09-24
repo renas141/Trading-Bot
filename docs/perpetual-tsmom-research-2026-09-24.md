@@ -72,3 +72,18 @@ beobachtete p95-Fall besitzt 2025 einen Profitfaktor unter eins. Weitere kleine
 Änderungen an den beiden Horizonten oder am Stop würden dieselben gesehenen Daten
 nachträglich optimieren. Für einen belastbaren nächsten Test braucht es eine neue,
 strukturell begründete Regel und anschließend zeitlich neue Daten.
+
+## Nachträgliche Richtungsdiagnose
+
+Eine anschließend fest gebundene Diagnose zerlegte die unveränderten Trades nach
+Richtung. 2024 erzielten LONG-Trades +115,92 USD, während SHORT-Trades
+−47,18 USD verloren. Ein bloßes Abschalten von SHORT wäre trotzdem keine Lösung:
+2025 verloren auch die tatsächlich entstandenen LONG-Trades −17,25 USD; die
+SHORT-Trades verloren weitere −3,07 USD. Unter doppelten Kosten waren beide Seiten
+ebenfalls negativ. Diese Zuordnung ist kein neuer LONG-only-Backtest, weil das
+Entfernen einer Richtung spätere Einstiegsgelegenheiten verändern könnte.
+
+Diagnose-SHA-256:
+`31d9e60e5a5bb99ea30396f1a994292eeec31b1939af678f6155fb31d20f1a1c`.
+Bericht-SHA-256:
+`3315e3d08f9b92bbcb5a4e375b35a381db18eeea5de697ddece91fdc4e5034b1`.
