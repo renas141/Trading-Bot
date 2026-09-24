@@ -8,7 +8,7 @@ Es gibt derzeit **keine belastbar profitable Strategie und keine Handelsfreigabe
 
 Die Datenprüfung für zwei zuvor leere 4-Stunden-Intervalle wurde mit öffentlichen Kraken-Einzeltrades belegt. Es wurden keine künstlichen Kerzen ergänzt: In den überprüften Intervallen ohne veröffentlichte Trades gibt es keine simulierten Ein- oder Ausstiege, offene Positionen und Risikozustände bleiben erhalten, und ein Stop kann erst am ersten belegten Folge-Trade reagieren. Ungeprüfte Lücken bleiben gesperrt.
 
-Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen nun **170 abgeschlossene Forschungsläufe in 15 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Testsuite wird nach jeder Erweiterung erneut geprüft; Python-Quellen und Dashboard-JavaScript werden zusätzlich syntaktisch kontrolliert. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
+Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen nun **176 abgeschlossene Forschungsläufe in 16 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Testsuite wird nach jeder Erweiterung erneut geprüft; Python-Quellen und Dashboard-JavaScript werden zusätzlich syntaktisch kontrolliert. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
 
 ## Ergebnisvergleich
 
@@ -60,6 +60,12 @@ Am 24.09. wurde außerdem eine eigenständige
 vor der Ergebnisberechnung eingefroren und erstmals mit den beobachteten
 p95-Kosten geprüft. Sie war 2023/2024 positiv, scheiterte aber 2025 mit
 −20,32 USD normal und −31,21 USD unter doppelten Kosten. 2026 blieb unangetastet.
+
+Eine letzte kurzfristige Momentum-Regel mit festen 7-/28-Tage-Horizonten und
+höchstens sieben Tagen Haltedauer scheiterte ebenfalls 2025: −38,90 USD bei den
+beobachteten Kosten und −71,12 USD unter doppelten Kosten. Die
+[vollständige Auswertung](perpetual-short-momentum-research-2026-09-24.md)
+beendet diese Momentum-Forschungsfolge ohne Auswahl.
 
 Das Modell unterstützt echte signierte Funding-Reihen, aber historische API-Reihen für 2023–2025 fehlen; dafür wurden nachteilige Funding-Sensitivitäten verwendet. 2026-Perpetual-Kursdaten wurden weder geladen noch ausgewertet. LIVE und Strategie-PAPER bleiben gesperrt. Der GitHub-Zugriff ist inzwischen repositorygebunden eingerichtet und der Stand auf `main` gesichert.
 

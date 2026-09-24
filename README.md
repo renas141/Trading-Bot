@@ -319,6 +319,13 @@ und 2024 auch unter doppelten Kosten positiv, scheiterte jedoch 2025 mit
 −20,32 USD normal und −31,21 USD im Stress. Damit gibt es weiterhin keine
 Strategiefreigabe; PF_XBTUSD ab 2026 blieb unangetastet.
 
+Eine zweite und letzte, an der veröffentlichten 1–8-Wochen-Evidenz ausgerichtete
+[Kurzfrist-Momentum-Studie](docs/perpetual-short-momentum-research-2026-09-24.md)
+prüfte feste 7-/28-Tage-Horizonte und eine maximale Haltedauer von sieben Tagen.
+Auch sie war 2023/2024 positiv, verlor 2025 aber −38,90 USD normal und
+−71,12 USD unter doppelten Kosten. Weitere Momentum-Horizonte werden auf diesen
+gesehenen Daten nicht ausprobiert.
+
 Die [dritte Hypothese auf 4-Stunden-Kerzen](docs/slow-research.md) ist vorab
 festgelegt. Der neue Downloader liest gezielt BTC/EUR aus dem vollständigen
 Kraken-Archiv. Die Qualitätsprüfung fand zwei 4h-Lücken, die sich auch nicht
