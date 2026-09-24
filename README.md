@@ -343,6 +343,11 @@ Eine anschließend mit neuen öffentlichen Regimereihen eingefrorene
 forderte zusätzlich steigendes Open Interest und übereinstimmenden Aggressor-/CVD-Fluss.
 Sie verbesserte 2025 auf +0,01 USD bei beobachteten Kosten, scheiterte aber im
 doppelten Kostenfall mit −8,50 USD. Auch diese Regel ist nicht freigegeben.
+Die [Richtungs- und Ausstiegsdiagnose](docs/perpetual-regime-momentum-diagnostics-2026-09-24.md)
+fand keinen stabilen Long-/Short-Filter. Ein marktneutraler
+[Spot/Perpetual-Carry](docs/perpetual-carry-feasibility-2026-09-24.md) wurde
+ebenfalls nur vorgeprüft: Die aktuelle Funding-Stichprobe amortisiert die
+Einstiegsgebühren zu langsam und die gemeinsame Basis-/Funding-Historie fehlt.
 
 Die [dritte Hypothese auf 4-Stunden-Kerzen](docs/slow-research.md) ist vorab
 festgelegt. Der neue Downloader liest gezielt BTC/EUR aus dem vollständigen

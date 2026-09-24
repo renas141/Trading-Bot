@@ -90,6 +90,14 @@ ausgewählt oder nachträglich geändert.
 
 Das Modell unterstützt echte signierte Funding-Reihen, aber historische API-Reihen für 2023–2025 fehlen; dafür wurden nachteilige Funding-Sensitivitäten verwendet. 2026-Perpetual-Kursdaten wurden weder geladen noch ausgewertet. Regimewerte aus 2026 wurden dagegen für die technische Datenprüfung bereits angesehen; ein vollständig blinder Regime-Zeitraum beginnt deshalb erst nach dem 24.09.2026. LIVE und Strategie-PAPER bleiben gesperrt. Der GitHub-Zugriff ist inzwischen repositorygebunden eingerichtet und der Stand auf `main` gesichert.
 
+Die nachgelagerte Diagnose fand keinen stabilen Richtungsfilter: 2024 verdienten
+Long-Trades und Shorts verloren, 2025 war es umgekehrt. Eine marktneutralere
+Spot/Perpetual-Carry-Idee wurde deshalb auf Kostenebene geprüft. Beim aktuellen
+Einstiegstarif liegt die reine Gebührenhürde für beide Legs bei etwa 0,84 % als
+Maker beziehungsweise 1,70 % als Taker. Der einzelne Funding-Tag würde das erst
+nach grob 50 beziehungsweise 100 gleichartigen Tagen ausgleichen. Wegen fehlender
+Langzeithistorie und grober Basisdaten wurde daraus kein weiterer Strategietest.
+
 ## Verbleibende Grenzen und nächste Schritte
 
 Die vorhandenen Auswahlverfahren und Gates wurden angewendet, aber von keinem Strategiekandidaten bestanden. Der erste achtstündige Perpetual-Kostenlauf und sein Kalibrierungstor sind abgeschlossen; weitere Marktphasen fehlen weiterhin. Eine Handelsstrategie ist für den Dauerbetrieb noch nicht freigegeben. OHLC-Daten sind nicht tickgenau; ein Stop garantiert keinen Ausführungskurs.

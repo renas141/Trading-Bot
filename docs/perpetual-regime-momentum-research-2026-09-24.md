@@ -58,6 +58,9 @@ Die Regimebestätigung verbesserte den schwachen 2025-Befund gegenüber der
 ungefilterten kurzfristigen Momentum-Regel deutlich, überstand aber den
 Kostenstress nicht. Eine weitere Filteränderung auf denselben Jahren würde den
 bereits gesehenen Daten folgen und zählt nicht als Reparatur dieses Versuchs.
+Die getrennte [Trade-Diagnose](perpetual-regime-momentum-diagnostics-2026-09-24.md)
+zeigt zudem, dass die profitable Richtung zwischen 2024 und 2025 wechselte und
+die Zeit-Ausstiege 2025 die Stop-Verluste nur vor erhöhten Kosten ausglichen.
 
 2026-PF_XBTUSD-Kursresultate wurden weiterhin weder geladen noch ausgewertet.
 Da 2026-Regimeverteilungen bereits bei der technischen Datenprüfung angesehen
