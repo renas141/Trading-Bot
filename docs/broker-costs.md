@@ -55,6 +55,17 @@ Rabattstufen dürfen erst nach modelliertem, tatsächlich erreichtem Umsatz gelt
 das aktuelle Experiment hält die Einstiegskosten konstant und behauptet keine
 historisch exakte Gebührenrekonstruktion.
 
-Derivate wurden nicht wegen niedriger angezeigter Handelsgebühren zum Ersatz
-erklärt. Funding, Margin, Liquidationen, Produkterlaubnis und ein anderes
-Risikomodell fehlen noch. Hebel verbessert keinen negativen Erwartungswert.
+## Getrennte Derivate-Entscheidung
+
+Funding, Margin, Liquidationen und ein lineares Perpetual-Risikomodell sind
+inzwischen im lokalen Replay umgesetzt. Kraken bleibt für `PF_XBTUSD` der
+technisch passende Forschungskandidat; der Einstiegstarif liegt aktuell bei
+0,0200 % Maker und 0,0500 % Taker. EWR-Kunden müssen ihre MiFID-Eignung und das
+konkrete Produkt im Konto bestätigen. Die aktuelle Demo-Dokumentation ist
+widersprüchlich und der frühere Demo-Endpunkt leitete bei der Prüfung um. Details,
+Quellen und die festgelegte Freigabereihenfolge stehen in der
+[Derivate-Brokerprüfung vom 24.09.2026](derivative-broker-review-2026-09-24.md).
+
+Niedrige Handelsgebühren machen eine negative Strategie nicht profitabel. Funding,
+Spread, Slippage, Collateral-Umwandlungen und Kurslücken bleiben zusätzlich zu
+modellieren beziehungsweise im PAPER-Betrieb zu messen.

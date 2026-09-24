@@ -349,6 +349,11 @@ Brokerpreise von den älteren Modellannahmen.
 3. **Brokerkonto prüfen:** EWR-Berechtigung, konkreten Marginplan, Collateral,
    minimale Ordergröße und API-Rechte lesend verifizieren; echte Orders bleiben gesperrt.
 
+Die aktuelle [Derivate-Brokerprüfung](docs/derivative-broker-review-2026-09-24.md)
+bestätigt Kraken als technisch passendsten Kandidaten für den vorhandenen
+PF_XBTUSD-Replay, dokumentiert aber auch die erforderliche EWR-Eignungsprüfung und
+eine derzeit nicht verlässlich bestätigte Demo-Umgebung.
+
 Der langfristige Weg bleibt: historische Daten → Backtesting → Paper Trading →
 gesondert geprüfte Kraken-Demo/Testumgebung → erst wesentlich später optional LIVE.
 Die spätere Demo-Anbindung muss über eine ausdrücklich getrennte Umgebung laufen;
