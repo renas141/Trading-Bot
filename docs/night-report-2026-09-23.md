@@ -8,7 +8,7 @@ Es gibt derzeit **keine belastbar profitable Strategie und keine Handelsfreigabe
 
 Die Datenprüfung für zwei zuvor leere 4-Stunden-Intervalle wurde mit öffentlichen Kraken-Einzeltrades belegt. Es wurden keine künstlichen Kerzen ergänzt: In den überprüften Intervallen ohne veröffentlichte Trades gibt es keine simulierten Ein- oder Ausstiege, offene Positionen und Risikozustände bleiben erhalten, und ein Stop kann erst am ersten belegten Folge-Trade reagieren. Ungeprüfte Lücken bleiben gesperrt.
 
-Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen **164 abgeschlossene Forschungsläufe in 14 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Suite ist mit **244 Tests grün**; Python-Quellen und Dashboard-JavaScript wurden zusätzlich syntaktisch geprüft. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
+Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen nun **170 abgeschlossene Forschungsläufe in 15 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Testsuite wird nach jeder Erweiterung erneut geprüft; Python-Quellen und Dashboard-JavaScript werden zusätzlich syntaktisch kontrolliert. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
 
 ## Ergebnisvergleich
 
@@ -54,6 +54,12 @@ Kostenkandidaten bestand. Die vollständige Auswertung steht im
 ## Perpetual-Holdout und zusätzliche Grenzen
 
 Der zunächst positive Long-only-Entwicklungsfall scheiterte im einmaligen 2025-Holdout: **−19,06 USD normal und −34,40 USD im Stressfall bei jeweils 5 Trades**. Auch die nachgelagerten Regeln für Gewinnschutz, Zeit/Momentum, Wiedereinstiegspause und ATR-Trailing wurden nicht ausgewählt. Die klassische Donchian-Trendregel endete 2025 bei **−24,92 USD normal und −35,84 USD Stress bei 9 Trades**. Keine dieser Varianten ist für PAPER oder LIVE freigegeben.
+
+Am 24.09. wurde außerdem eine eigenständige
+[Dual-Horizon-Zeitreihen-Momentum-Regel](perpetual-tsmom-research-2026-09-24.md)
+vor der Ergebnisberechnung eingefroren und erstmals mit den beobachteten
+p95-Kosten geprüft. Sie war 2023/2024 positiv, scheiterte aber 2025 mit
+−20,32 USD normal und −31,21 USD unter doppelten Kosten. 2026 blieb unangetastet.
 
 Das Modell unterstützt echte signierte Funding-Reihen, aber historische API-Reihen für 2023–2025 fehlen; dafür wurden nachteilige Funding-Sensitivitäten verwendet. 2026-Perpetual-Kursdaten wurden weder geladen noch ausgewertet. LIVE und Strategie-PAPER bleiben gesperrt. Der GitHub-Zugriff ist inzwischen repositorygebunden eingerichtet und der Stand auf `main` gesichert.
 

@@ -210,6 +210,25 @@ class DashboardTests(unittest.TestCase):
         with self.assertRaises(KeyError):
             self.store.run(study["id"])
 
+    def test_dual_horizon_tsmom_is_a_supported_derivative_report(self):
+        folder = self.research / "tsmom"
+        evaluation = folder / "evaluation"
+        evaluation.mkdir(parents=True)
+        protocol = {"protocol_version": "perpetual-dual-horizon-tsmom-development-v1",
+                    "created_at": "2026-09-24T05:00:00+00:00"}
+        (folder / "protocol.json").write_text(json.dumps(protocol))
+        result = {"protocol_sha256": hashlib.sha256((folder / "protocol.json").read_bytes()).hexdigest(),
+                  "assessment": {"screen_passed": False, "selected": None}, "runs": []}
+        (evaluation / "results.json").write_text(json.dumps(result))
+        (evaluation / "report.md").write_text("TSMOM screen failed.")
+        (evaluation / "completion.json").write_text(json.dumps({
+            "results_sha256": hashlib.sha256((evaluation / "results.json").read_bytes()).hexdigest()}))
+        study = next(s for s in self.store.catalog()[0]
+                     if s.get("title") == "Perpetual: duales Zeitreihen-Momentum")
+        self.assertTrue(study["report_only"])
+        self.assertFalse(study["screen_passed"])
+        self.assertIn("keine Handelsfreigabe", study["finding_note"])
+
     def test_corrupt_or_external_artifacts_are_unavailable(self):
         (self.research / "outside").symlink_to(self.root / "dataset", target_is_directory=True)
         (self.root / "dataset/results.json").write_text("{}")

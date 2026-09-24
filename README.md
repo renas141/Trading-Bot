@@ -312,6 +312,13 @@ vorab festgelegt. Der einfache Donchian-Ansatz erhöhte die Zahl der Trades und 
 2023/2024 positiv, scheiterte 2025 aber mit −24,92 USD normal und −35,84 USD im
 Stress. Die Parametersuche auf den gesehenen Jahren ist damit beendet.
 
+Eine anschließend separat vorab registrierte
+[Dual-Horizon-Momentum-Studie](docs/perpetual-tsmom-research-2026-09-24.md)
+verwendete erstmals den bestandenen beobachteten Kostenkandidaten. Sie war 2023
+und 2024 auch unter doppelten Kosten positiv, scheiterte jedoch 2025 mit
+−20,32 USD normal und −31,21 USD im Stress. Damit gibt es weiterhin keine
+Strategiefreigabe; PF_XBTUSD ab 2026 blieb unangetastet.
+
 Die [dritte Hypothese auf 4-Stunden-Kerzen](docs/slow-research.md) ist vorab
 festgelegt. Der neue Downloader liest gezielt BTC/EUR aus dem vollständigen
 Kraken-Archiv. Die Qualitätsprüfung fand zwei 4h-Lücken, die sich auch nicht
