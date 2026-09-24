@@ -67,6 +67,7 @@ class ResearchStore:
                     "perpetual-donchian-trend-development-v1": ("Perpetual: klassischer Donchian-Trend", "Entwicklung 2023–2025"),
                     "perpetual-dual-horizon-tsmom-development-v1": ("Perpetual: duales Zeitreihen-Momentum", "Entwicklung 2023–2025"),
                     "perpetual-short-horizon-tsmom-development-v1": ("Perpetual: kurzfristiges Zeitreihen-Momentum", "Entwicklung 2023–2025"),
+                    "perpetual-regime-confirmed-momentum-development-v1": ("Perpetual: regimebestätigtes Momentum", "Entwicklung 2023–2025"),
                 }
                 if version in derivative_versions:
                     receipt = read_json(self.contained(folder / "completion.json"))

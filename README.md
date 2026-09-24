@@ -333,6 +333,12 @@ Auch sie war 2023/2024 positiv, verlor 2025 aber −38,90 USD normal und
 −71,12 USD unter doppelten Kosten. Weitere Momentum-Horizonte werden auf diesen
 gesehenen Daten nicht ausprobiert.
 
+Eine anschließend mit neuen öffentlichen Regimereihen eingefrorene
+[Regime-Momentum-Studie](docs/perpetual-regime-momentum-research-2026-09-24.md)
+forderte zusätzlich steigendes Open Interest und übereinstimmenden Aggressor-/CVD-Fluss.
+Sie verbesserte 2025 auf +0,01 USD bei beobachteten Kosten, scheiterte aber im
+doppelten Kostenfall mit −8,50 USD. Auch diese Regel ist nicht freigegeben.
+
 Die [dritte Hypothese auf 4-Stunden-Kerzen](docs/slow-research.md) ist vorab
 festgelegt. Der neue Downloader liest gezielt BTC/EUR aus dem vollständigen
 Kraken-Archiv. Die Qualitätsprüfung fand zwei 4h-Lücken, die sich auch nicht

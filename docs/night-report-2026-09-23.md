@@ -8,7 +8,7 @@ Es gibt derzeit **keine belastbar profitable Strategie und keine Handelsfreigabe
 
 Die Datenprüfung für zwei zuvor leere 4-Stunden-Intervalle wurde mit öffentlichen Kraken-Einzeltrades belegt. Es wurden keine künstlichen Kerzen ergänzt: In den überprüften Intervallen ohne veröffentlichte Trades gibt es keine simulierten Ein- oder Ausstiege, offene Positionen und Risikozustände bleiben erhalten, und ein Stop kann erst am ersten belegten Folge-Trade reagieren. Ungeprüfte Lücken bleiben gesperrt.
 
-Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen nun **176 abgeschlossene Forschungsläufe in 16 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Testsuite wird nach jeder Erweiterung erneut geprüft; Python-Quellen und Dashboard-JavaScript werden zusätzlich syntaktisch kontrolliert. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
+Zusätzlich wurde ein getrenntes, ausschließlich simuliertes Bitcoin-Perpetual-Modell (`PF_XBTUSD`) mit LONG/SHORT, Funding, Margin, Liquidation und maximal 10x Hebel geprüft. Es besitzt keine private Börsenanbindung und sendet keine Orders. Insgesamt liegen nun **182 abgeschlossene Forschungsläufe in 17 ausgewerteten Studien sowie ein gesperrter Datenplan** vor. Die vollständige Testsuite wird nach jeder Erweiterung erneut geprüft; Python-Quellen und Dashboard-JavaScript werden zusätzlich syntaktisch kontrolliert. Die Datenbankergebnisse, Abschlussbelege und SQLite-Integrität wurden abgeglichen.
 
 ## Ergebnisvergleich
 
@@ -73,7 +73,12 @@ Long/Short-Verhältnis und CVD geprüft und lokal mit Rohantworten sowie
 Prüfsummen gespeichert. 2024 und 2025 sind vollständig, die gemeinsame
 2023-Abdeckung beginnt am 31. Mai. Die [Datendokumentation](perpetual-regime-data-2026-09-24.md)
 beschreibt Abdeckung, Hashes und die zusätzliche Vierstunden-Verzögerung gegen
-Lookahead. Diese Erweiterung ist noch kein weiterer Strategielauf.
+Lookahead. Darauf wurde genau eine
+[regimebestätigte Momentum-Regel](perpetual-regime-momentum-research-2026-09-24.md)
+vor dem Replay eingefroren. Sie war 2023 deutlich und 2024 knapp positiv. 2025
+endete sie bei beobachteten Kosten praktisch unverändert mit +0,01 USD und unter
+doppelten Kosten mit −8,50 USD. Das Gate scheiterte; die Regel wurde nicht
+ausgewählt oder nachträglich geändert.
 
 Das Modell unterstützt echte signierte Funding-Reihen, aber historische API-Reihen für 2023–2025 fehlen; dafür wurden nachteilige Funding-Sensitivitäten verwendet. 2026-Perpetual-Kursdaten wurden weder geladen noch ausgewertet. Regimewerte aus 2026 wurden dagegen für die technische Datenprüfung bereits angesehen; ein vollständig blinder Regime-Zeitraum beginnt deshalb erst nach dem 24.09.2026. LIVE und Strategie-PAPER bleiben gesperrt. Der GitHub-Zugriff ist inzwischen repositorygebunden eingerichtet und der Stand auf `main` gesichert.
 
