@@ -51,6 +51,14 @@ im Kauf und 0,736 im Verkauf. Das Gate für einen nicht aktivierenden
 Kostenkandidaten bestand. Die vollständige Auswertung steht im
 [Kostenbericht](perpetual-cost-observation-2026-09-24.md).
 
+Der separate Funding-Analytics-Endpunkt lieferte für Anfang 2025 keine Daten,
+aber für den letzten abgeschlossenen Tag eine lückenlose stündliche Reihe. Die
+24-Stunden-Summe für Long betrug rund 0,01693 %; das Vierstundenmittel lag damit
+über der primären bisherigen Sensitivität, jedoch unter dem doppelten Stressfall.
+Der [Funding-Bericht](perpetual-funding-forward-data-2026-09-24.md) bindet
+Rohantwort und normalisierte Reihe per Prüfsumme. Ein Tag ersetzt keine
+Langzeitkalibrierung, ermöglicht aber künftig echte signierte Forward-Kosten.
+
 ## Perpetual-Holdout und zusätzliche Grenzen
 
 Der zunächst positive Long-only-Entwicklungsfall scheiterte im einmaligen 2025-Holdout: **−19,06 USD normal und −34,40 USD im Stressfall bei jeweils 5 Trades**. Auch die nachgelagerten Regeln für Gewinnschutz, Zeit/Momentum, Wiedereinstiegspause und ATR-Trailing wurden nicht ausgewählt. Die klassische Donchian-Trendregel endete 2025 bei **−24,92 USD normal und −35,84 USD Stress bei 9 Trades**. Keine dieser Varianten ist für PAPER oder LIVE freigegeben.

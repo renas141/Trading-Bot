@@ -27,6 +27,9 @@ implementierte profitable Handelsstrategie**.
 - geprüfte öffentliche PF_XBTUSD-Regimehistorien für Open Interest, Handelsfluss,
   Liquidationen, Volatilität und Positionierungsverhältnis mit vollständigen
   Rohantworten, Prüfsummen und konservativer Vierstunden-Verzögerung,
+- verifizierte stündliche PF_XBTUSD-Funding-Archive für neue Forward-Zeiträume;
+  alte Replays bleiben bei dokumentierten Sensitivitäten, wenn Kraken keine
+  vollständige historische Reihe liefert,
   inklusive Herkunft, SHA-256-Prüfsummen und Qualitätsbericht.
 - Prüfung auf Lücken und unvollständige Kerzen sowie chronologische Trennung
   in Entwicklungsdaten und spätere Holdout-Daten.
@@ -203,6 +206,8 @@ aus [docs/research.md](docs/research.md) verwenden. Es findet keine Parametersuc
 Die neue [Regimedaten-Dokumentation](docs/perpetual-regime-data-2026-09-24.md)
 beschreibt die verifizierten 2023–2025-Pakete und ihre zeitlich verzögerte
 Verknüpfung mit PF_XBTUSD-Kerzen. Daraus ist noch keine Strategie freigegeben.
+Der [Funding-Forward-Bericht](docs/perpetual-funding-forward-data-2026-09-24.md)
+beschreibt den ersten lückenlosen Stundentag und die Grenze der älteren Historie.
 
 ## Historische Kraken-Daten
 
