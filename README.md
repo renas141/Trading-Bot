@@ -24,6 +24,9 @@ implementierte profitable Handelsstrategie**.
 - wiederaufnehmbare öffentliche Kraken-Perpetual-Kostenmessung für Spread,
   geschätzte Slippage, Funding und Datenalter mit Mindestabdeckung vor jeder
   Kostenkalibrierung,
+- geprüfte öffentliche PF_XBTUSD-Regimehistorien für Open Interest, Handelsfluss,
+  Liquidationen, Volatilität und Positionierungsverhältnis mit vollständigen
+  Rohantworten, Prüfsummen und konservativer Vierstunden-Verzögerung,
   inklusive Herkunft, SHA-256-Prüfsummen und Qualitätsbericht.
 - Prüfung auf Lücken und unvollständige Kerzen sowie chronologische Trennung
   in Entwicklungsdaten und spätere Holdout-Daten.
@@ -196,6 +199,10 @@ TRADING_MODE=BACKTEST LOG_LEVEL=WARNING python main.py \
 Dieser Einzelaufruf verwendet den gesamten gewählten Datensatz. Für eine
 vordefinierte Entwicklungs-/Holdout-Trennung stattdessen das Forschungsprotokoll
 aus [docs/research.md](docs/research.md) verwenden. Es findet keine Parametersuche statt.
+
+Die neue [Regimedaten-Dokumentation](docs/perpetual-regime-data-2026-09-24.md)
+beschreibt die verifizierten 2023–2025-Pakete und ihre zeitlich verzögerte
+Verknüpfung mit PF_XBTUSD-Kerzen. Daraus ist noch keine Strategie freigegeben.
 
 ## Historische Kraken-Daten
 

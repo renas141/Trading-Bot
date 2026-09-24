@@ -67,7 +67,15 @@ beobachteten Kosten und −71,12 USD unter doppelten Kosten. Die
 [vollständige Auswertung](perpetual-short-momentum-research-2026-09-24.md)
 beendet diese Momentum-Forschungsfolge ohne Auswahl.
 
-Das Modell unterstützt echte signierte Funding-Reihen, aber historische API-Reihen für 2023–2025 fehlen; dafür wurden nachteilige Funding-Sensitivitäten verwendet. 2026-Perpetual-Kursdaten wurden weder geladen noch ausgewertet. LIVE und Strategie-PAPER bleiben gesperrt. Der GitHub-Zugriff ist inzwischen repositorygebunden eingerichtet und der Stand auf `main` gesichert.
+Als nächste, getrennte Datenstufe wurden öffentliche PF_XBTUSD-Regimereihen für
+Open Interest, Aggressor-Fluss, Liquidationen, rollende Volatilität,
+Long/Short-Verhältnis und CVD geprüft und lokal mit Rohantworten sowie
+Prüfsummen gespeichert. 2024 und 2025 sind vollständig, die gemeinsame
+2023-Abdeckung beginnt am 31. Mai. Die [Datendokumentation](perpetual-regime-data-2026-09-24.md)
+beschreibt Abdeckung, Hashes und die zusätzliche Vierstunden-Verzögerung gegen
+Lookahead. Diese Erweiterung ist noch kein weiterer Strategielauf.
+
+Das Modell unterstützt echte signierte Funding-Reihen, aber historische API-Reihen für 2023–2025 fehlen; dafür wurden nachteilige Funding-Sensitivitäten verwendet. 2026-Perpetual-Kursdaten wurden weder geladen noch ausgewertet. Regimewerte aus 2026 wurden dagegen für die technische Datenprüfung bereits angesehen; ein vollständig blinder Regime-Zeitraum beginnt deshalb erst nach dem 24.09.2026. LIVE und Strategie-PAPER bleiben gesperrt. Der GitHub-Zugriff ist inzwischen repositorygebunden eingerichtet und der Stand auf `main` gesichert.
 
 ## Verbleibende Grenzen und nächste Schritte
 
