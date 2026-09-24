@@ -98,6 +98,13 @@ Maker beziehungsweise 1,70 % als Taker. Der einzelne Funding-Tag würde das erst
 nach grob 50 beziehungsweise 100 gleichartigen Tagen ausgleichen. Wegen fehlender
 Langzeithistorie und grober Basisdaten wurde daraus kein weiterer Strategietest.
 
+Für den notwendigen neuen Beobachtungszeitraum existiert nun ein wiederholbarer
+Vierstunden-Sammler. Er bindet Trade-/Mark-Kerzen, Regime, vier Funding-Stunden
+und einen aktuellen Kosten-Snapshot in einem unveränderlichen Paket. Der erste
+Block 08:00–12:00 UTC ist vollständig und umfasst 23 geprüfte Dateien. Die
+[Forward-Dokumentation](perpetual-forward-collection-2026-09-24.md) hält
+Zeitbezug und Grenzen fest. Es werden weiterhin keine Orders erzeugt.
+
 ## Verbleibende Grenzen und nächste Schritte
 
 Die vorhandenen Auswahlverfahren und Gates wurden angewendet, aber von keinem Strategiekandidaten bestanden. Der erste achtstündige Perpetual-Kostenlauf und sein Kalibrierungstor sind abgeschlossen; weitere Marktphasen fehlen weiterhin. Eine Handelsstrategie ist für den Dauerbetrieb noch nicht freigegeben. OHLC-Daten sind nicht tickgenau; ein Stop garantiert keinen Ausführungskurs.

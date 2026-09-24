@@ -30,6 +30,9 @@ implementierte profitable Handelsstrategie**.
 - verifizierte stündliche PF_XBTUSD-Funding-Archive für neue Forward-Zeiträume;
   alte Replays bleiben bei dokumentierten Sensitivitäten, wenn Kraken keine
   vollständige historische Reihe liefert,
+- unveränderliche PF_XBTUSD-Forward-Pakete je abgeschlossenem Vierstundenblock
+  mit Trade-/Mark-Kurs, Regime, Funding, aktuellem Kosten-Snapshot und
+  komponentenübergreifender Integritätsprüfung,
   inklusive Herkunft, SHA-256-Prüfsummen und Qualitätsbericht.
 - Prüfung auf Lücken und unvollständige Kerzen sowie chronologische Trennung
   in Entwicklungsdaten und spätere Holdout-Daten.
@@ -208,6 +211,8 @@ beschreibt die verifizierten 2023–2025-Pakete und ihre zeitlich verzögerte
 Verknüpfung mit PF_XBTUSD-Kerzen. Daraus ist noch keine Strategie freigegeben.
 Der [Funding-Forward-Bericht](docs/perpetual-funding-forward-data-2026-09-24.md)
 beschreibt den ersten lückenlosen Stundentag und die Grenze der älteren Historie.
+Die [laufende Forward-Sammlung](docs/perpetual-forward-collection-2026-09-24.md)
+führt diese Daten nun gemeinsam mit Preisen, Regime und Ausführungskosten fort.
 
 ## Historische Kraken-Daten
 
