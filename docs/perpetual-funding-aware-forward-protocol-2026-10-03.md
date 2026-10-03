@@ -82,3 +82,42 @@ von der Performance-Auswertung aus.
 Der Screen muss mit gültigem Abschlussbeleg bestehen, bevor der Holdout überhaupt
 gelesen werden darf. Ein Fehlschlag beendet die Hypothese. Parameteränderungen
 würden eine neue Regel und einen neuen zukünftigen Zeitraum erfordern.
+
+## Gesperrter Forward-Paperbetrieb
+
+Die Software für die nachgelagerte Shadow-PAPER-Stufe ist fertig. Ihr Status lässt
+sich bereits jetzt lesen, ohne Screen- oder Holdout-Ergebnisse vorzeitig zu öffnen:
+
+```bash
+.venv/bin/python -m app.derivatives.forward_paper status \
+  --protocol data/research/perpetual_funding_aware_forward_20261003_v2/protocol.json
+```
+
+Der eigentliche Start verlangt gültige Abschlussbelege für **beide** Stufen. Er
+prüft zusätzlich die Prüfsummen des Protokolls, der Kostenannahmen, der Ergebnisse
+und sämtlicher verwendeter Forward-Pakete. Fehlt eine Bedingung oder wurde eine
+Datei verändert, endet der Aufruf ohne Handelssimulation:
+
+```bash
+.venv/bin/python -m app.derivatives.forward_paper run \
+  --output data/paper/pf_xbtusd_funding_aware_v2 \
+  --forward-root data/forward/pf_xbtusd \
+  --protocol data/research/perpetual_funding_aware_forward_20261003_v2/protocol.json \
+  --cost-candidate data/evidence/perpetual-costs-20260923-evening/cost-candidate.json \
+  --cost-summary data/evidence/perpetual-costs-20260923-evening/summary.json
+```
+
+Nach einer Freigabe beginnt der Lauf mit einem frischen virtuellen Konto. Er
+übernimmt keine Gewinne aus Screen oder Holdout. Pro Block werden LONG/SHORT,
+Funding, Mark-Kurs, Stop, Liquidation, maximal sieben Tage Haltedauer, Tagesverlust
+und Drawdown verarbeitet. Der Risikomanager lässt höchstens 10x zu und wählt den
+kleinsten Hebel, der für die risikobasierte Position nötig ist. Jeder Zustand ist
+über eine Ereignis-Prüfsummenkette wiederherstellbar; ein zweiter Prozess wird per
+Dateisperre abgewiesen.
+
+Das ist bewusst eine **Forward-Shadow-Simulation**. Die Eingangsentscheidung ist
+zeitlich kausal und verwendet den nächsten Vierstunden-Open, das fertige Paket wird
+aber erst nach Abschluss dieses Blocks archiviert. Damit prüft der Lauf Strategie,
+Kosten-, Margin- und Wiederanlauflogik auf neuen Daten. Er misst noch keine reale
+Orderlatenz und sendet niemals Orders. Eine private Kraken-Anbindung bleibt separat
+und LIVE bleibt technisch gesperrt.

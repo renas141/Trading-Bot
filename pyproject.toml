@@ -17,6 +17,7 @@ trading-research = "backtesting.research:main"
 trading-diagnose = "backtesting.diagnostics:main"
 trading-net-research = "backtesting.net_reward_research:main"
 trading-dashboard = "dashboard.server:main"
+trading-perpetual-paper = "app.derivatives.forward_paper:main"
 
 [tool.setuptools.packages.find]
 include = ["app*", "backtesting*", "dashboard*"]

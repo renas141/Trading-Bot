@@ -37,6 +37,10 @@ implementierte profitable Handelsstrategie**.
 - ein ab 03.10.2026 vorab festgeschriebenes, funding-bewusstes Forward-Protokoll
   mit getrenntem 30-Tage-Screen und anschließendem 60-Tage-Holdout; es kann nur
   einen PAPER-Kandidaten erzeugen und aktiviert keinen Handel.
+- einen dauerhaft fortsetzbaren PF_XBTUSD-Forward-Paperlauf, der erst nach zwei
+  bestandenen, per SHA-256 gebundenen Ergebnisstufen startet, jeden neuen
+  Vierstundenblock erneut prüft und Konto, Position, Funding, Stops, Verlustsperren
+  und eine verkettete Ereignishistorie speichert.
 - Prüfung auf Lücken und unvollständige Kerzen sowie chronologische Trennung
   in Entwicklungsdaten und spätere Holdout-Daten.
 - Optional wählbare Forschungsstrategie `trend_breakout` mit Trend-, Breakout-,
@@ -240,7 +244,7 @@ für Strategie- oder Profitabilitätsaussagen.
 | Modus | Aktueller Stand |
 | --- | --- |
 | BACKTEST | Lokale Spot- und Perpetual-Simulation, keine realen Orders. |
-| PAPER | Virtuelles Konto und Broker-Grundlage; Derivate nicht als Strategie aktiviert. |
+| PAPER | Virtuelles Spotkonto mit NoTrade; Derivate-Forwardlauf fertig, aber bis zu einem bestandenen Holdout technisch gesperrt. |
 | LIVE | Technisch gesperrt, nicht implementiert. |
 
 - `TRADING_MODE=LIVE` **oder** `ENABLE_LIVE_TRADING=true` verhindert den Start.
@@ -273,12 +277,15 @@ Kraken-Annahmen und Quellen separat.
 `cash` ist verfügbares Guthaben. Equity bewertet zusätzlich offene Positionen zum
 angenommenen Netto-Verkaufserlös inklusive Ausführungskosten. Es gibt noch kein
 Orderbuch- oder Teilfüllungsmodell. Funding, Margin und Liquidation sind im
-separaten Perpetual-Replay vorhanden, noch nicht im normalen Spot-PaperBroker.
+getrennten Perpetual-Replay und im gesperrten, dauerhaft fortsetzbaren
+Forward-Paperlauf vorhanden. Der normale Spot-PaperBroker bleibt davon getrennt.
 
 ## Bewusst noch nicht implementiert
 
 - Private Exchange-Anbindung, echte Orders und API-Secrets.
-- Dauerhafter Derivate-Paperfeed; LONG/SHORT und Hebel sind derzeit nur lokal simuliert.
+- Ein Echtzeit-Derivate-Paperfeed mit tatsächlich zum Entscheidungszeitpunkt
+  beobachteten Quotes; der vorhandene Forward-Paperlauf verarbeitet verifizierte,
+  abgeschlossene Vierstundenpakete und bleibt deshalb eine Shadow-Simulation.
 - Validierte profitable Strategien, kalibrierte Scores, Multi-Timeframe-Auswertung
   und konkrete Regime-Erkennung.
 - Swing-basierte Stop-Ermittlung, Trailing, Break-even und Teilverkäufe.
@@ -288,7 +295,8 @@ separaten Perpetual-Replay vorhanden, noch nicht im normalen Spot-PaperBroker.
 - WebSockets, historisch vollständige Funding-, Orderbook- und Open-Interest-Daten.
   Eine begrenzte aktuelle [Perpetual-Kostenbeobachtung](docs/perpetual-observer.md)
   ist vorhanden, ersetzt diese Historie aber nicht.
-- Dauerbetrieb, Wiederaufnahme bestehender Portfolios und parallele Handelsprozesse.
+- Unbeaufsichtigter Prozessmanager und parallele Handelsprozesse. Spot- und
+  Derivate-Paperzustände können bereits nach einem Neustart fortgesetzt werden.
 - Machine Learning, LLM-Entscheidungen und externe kostenpflichtige Dienste.
 
 Die [lokale Forschungsübersicht](docs/dashboard.md) wird aus dem Projektordner mit
