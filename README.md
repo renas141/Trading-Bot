@@ -41,6 +41,10 @@ implementierte profitable Handelsstrategie**.
   bestandenen, per SHA-256 gebundenen Ergebnisstufen startet, jeden neuen
   Vierstundenblock erneut prüft und Konto, Position, Funding, Stops, Verlustsperren
   und eine verkettete Ereignishistorie speichert.
+- einen begrenzt gestarteten, wiederaufnehmbaren PF_XBTUSD-Echtzeit-Paperbeobachter
+  mit öffentlichen Bid-/Ask-Kursen, Ausführungstiefe, Datenalterprüfung, manuellem
+  Kill Switch und Dashboardstatus. Bis zum bestandenen Holdout ist NoTrade fest
+  eingestellt; der Kandidatenmodus prüft später sämtliche Abschlussbelege erneut.
 - Prüfung auf Lücken und unvollständige Kerzen sowie chronologische Trennung
   in Entwicklungsdaten und spätere Holdout-Daten.
 - Optional wählbare Forschungsstrategie `trend_breakout` mit Trend-, Breakout-,
@@ -283,9 +287,9 @@ Forward-Paperlauf vorhanden. Der normale Spot-PaperBroker bleibt davon getrennt.
 ## Bewusst noch nicht implementiert
 
 - Private Exchange-Anbindung, echte Orders und API-Secrets.
-- Ein Echtzeit-Derivate-Paperfeed mit tatsächlich zum Entscheidungszeitpunkt
-  beobachteten Quotes; der vorhandene Forward-Paperlauf verarbeitet verifizierte,
-  abgeschlossene Vierstundenpakete und bleibt deshalb eine Shadow-Simulation.
+- Ein unbeaufsichtigter WebSocket-Dauerfeed mit Tick-Markpreis. Der vorhandene
+  Echtzeit-Paperbeobachter verwendet bewusst begrenzte öffentliche Analytics-Abrufe;
+  der Forward-Paperlauf bleibt eine getrennte Shadow-Simulation.
 - Validierte profitable Strategien, kalibrierte Scores, Multi-Timeframe-Auswertung
   und konkrete Regime-Erkennung.
 - Swing-basierte Stop-Ermittlung, Trailing, Break-even und Teilverkäufe.
@@ -303,6 +307,9 @@ Die [lokale Forschungsübersicht](docs/dashboard.md) wird aus dem Projektordner 
 `.venv/bin/python -m dashboard.server` gestartet und unter
 [127.0.0.1:8765](http://127.0.0.1:8765) geöffnet. Sie benötigt keine zusätzlichen
 Pakete und zeigt abgeschlossene Forschungsdaten. Sie ist kein Handels-Terminal.
+Die Karte „Echtzeit-PAPER“ liest zusätzlich den ausdrücklich gestarteten
+[PF_XBTUSD-Paperbeobachter](docs/perpetual-realtime-paper.md); sie startet selbst
+keinen Abruf und keine geplante Aufgabe.
 Die Datenbank trennt Sessions, Signale samt Strategie-Version/Risikogründen,
 Orders mit Entry-/Exit-Gründen, Positionen, Trades, Equity und Backtest-Ergebnisse.
 Die Perpetual-Studien erscheinen als abgeschlossene Berichtskarten; ihr

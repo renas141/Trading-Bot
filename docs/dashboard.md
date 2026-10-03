@@ -53,6 +53,13 @@ Unvollständige oder widersprüchliche Artefakte erscheinen als nicht verfügbar
 oder mit Fehlermeldung. „Neu laden“ aktualisiert abgeschlossene Versuche;
 es findet kein automatischer Marktdatenabruf statt.
 
+Oberhalb der Forschungsberichte zeigt eine eigene Karte den aktuellen lokalen
+PF_XBTUSD-Paperstatus aus `data/paper`: virtuelles Kapital, offene Position,
+Hebel, Stop, Zahl der öffentlichen Quote-Beobachtungen, Strategie-Sperre,
+Kill Switch sowie Tagesverlust- und Drawdown-Sperren. Fehlt eine Session, zeigt
+die Karte ausdrücklich „Noch nicht gestartet“ und erfindet keine Werte. Bedienung
+und Grenzen stehen unter [PF_XBTUSD-Echtzeit-PAPER](perpetual-realtime-paper.md).
+
 ## Lesender Zugriff
 
 Quelle ist `data/research/`. Unterstützt werden `fixed-hypothesis-v1` und
@@ -75,5 +82,6 @@ Dateipfade; Symlinks außerhalb des Quellenordners werden abgelehnt. Der Server
 bindet fest an `127.0.0.1` und weist fremde Host-/Origin-Angaben zurück. Er ist
 für lokale Nutzung gedacht, nicht für öffentliches Hosting oder mehrere Nutzer.
 
-Paper-Session-Verwaltung, neue Strategien und Handelsfreigaben gehören nicht zu
-dieser Oberfläche. LIVE bleibt technisch gesperrt.
+Die Oberfläche liest den Paperstatus nur. Kill Switch, Session-Verwaltung, neue
+Strategien und Handelsfreigaben erfolgen ausschließlich über die dokumentierten
+lokalen Befehle. LIVE bleibt technisch gesperrt.

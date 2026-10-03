@@ -2,6 +2,7 @@
 
 const $ = id => document.getElementById(id);
 const euro = new Intl.NumberFormat("de-DE", {style: "currency", currency: "EUR"});
+const usd = new Intl.NumberFormat("de-DE", {style: "currency", currency: "USD"});
 const signedEuro = new Intl.NumberFormat("de-DE", {style: "currency", currency: "EUR", signDisplay: "exceptZero"});
 const percent = new Intl.NumberFormat("de-DE", {style: "percent", maximumFractionDigits: 2});
 const number = new Intl.NumberFormat("de-DE", {maximumFractionDigits: 8});
@@ -48,6 +49,33 @@ const el = (tag, value, className) => { const node = document.createElement(tag)
 function signed(node, value) { node.textContent = signedEuro.format(Number(value)); node.classList.toggle("negative", Number(value) < 0); node.classList.toggle("positive", Number(value) > 0); }
 function options(id, values, selected) { $(id).replaceChildren(...values.map(([value, label, disabled]) => { const option = el("option", label); option.value = value; option.disabled = !!disabled; return option; })); if (values.some(v => v[0] === selected && !v[2])) $(id).value = selected; }
 async function api(path, query = {}) { const response = await fetch(`/api/${path}?${new URLSearchParams(query)}`, {cache: "no-store"}); const body = await response.json(); if (!response.ok) throw new Error(body.error || "Daten konnten nicht geladen werden."); return body; }
+
+async function loadPaper() {
+  try {
+    const paper = await api("paper");
+    const names = {not_started: "Noch nicht gestartet", paused: "Pausiert", observing: "Beobachtung aktiv", degraded: "Datenfehler", caught_up: "Aktuell"};
+    const strategies = {not_started: "Noch keine Session", no_trade_waiting_for_validation: "Nur Beobachtung · Strategie gesperrt", funding_aware_candidate_active: "Geprüfter Kandidat aktiv"};
+    text("paper-name", `${paper.display_name} · PF_XBTUSD`);
+    text("paper-status", names[paper.status] || paper.status);
+    $("paper-status").classList.toggle("warning", paper.status === "degraded" || paper.manual_kill_switch);
+    text("paper-equity", paper.equity == null ? "—" : usd.format(Number(paper.equity)));
+    text("paper-balance", paper.balance == null ? "Noch keine Session" : `${usd.format(Number(paper.balance))} realisiertes Guthaben`);
+    const position = paper.open_position;
+    text("paper-position", position ? (position.direction === "LONG" ? "Long" : "Short") : "Keine");
+    text("paper-leverage", position ? `${position.leverage}x · Stop ${usd.format(Number(position.stop_price))}` : "Maximal 10x · kleinster nötiger Hebel");
+    text("paper-events", number.format(paper.quote_events || paper.processed_blocks || 0));
+    text("paper-last-quote", paper.last_quote_event_at ? `Letzte Marktdaten ${dateTime.format(new Date(paper.last_quote_event_at))} UTC` : "Noch keine Marktdaten");
+    const stopped = paper.manual_kill_switch || paper.daily_halted || paper.drawdown_halted;
+    text("paper-safety", stopped ? "Einstiege gesperrt" : "Schutz aktiv");
+    text("paper-strategy", `${strategies[paper.strategy_status] || paper.strategy_status || "Shadow-Simulation"} · LIVE aus`);
+    text("paper-actions", (paper.last_actions || []).length ? paper.last_actions.join(" · ") : "Keine neue Handelsaktion.");
+    text("paper-limit", paper.last_error || paper.model_limit || "Öffentliche Quotes und virtuelle Ausführungen; keine echten Orders.");
+  } catch (error) {
+    text("paper-status", "Nicht lesbar");
+    $("paper-status").classList.add("warning");
+    text("paper-actions", error.message);
+  }
+}
 
 async function loadCatalog() {
   const version = ++state.catalogVersion;
@@ -254,7 +282,7 @@ function showSignal(item) {
   $("detail-dialog").showModal();
 }
 
-$("refresh").addEventListener("click", loadCatalog);
+$("refresh").addEventListener("click", () => { loadCatalog(); loadPaper(); });
 $("study").addEventListener("change", selectStudy); $("group").addEventListener("change", selectGroup);
 $("variant").addEventListener("change", loadRun); $("cost").addEventListener("change", loadRun);
 for (const button of document.querySelectorAll("[data-view]")) button.addEventListener("click", () => switchView(button.dataset.view));
@@ -269,3 +297,4 @@ $("close-detail").addEventListener("click", () => $("detail-dialog").close());
 const chartObserver = new ResizeObserver(() => { if (state.run && !$("overview-view").hidden && !$("run-content").hidden) renderChart(state.run); });
 chartObserver.observe($("chart"));
 loadCatalog();
+loadPaper();

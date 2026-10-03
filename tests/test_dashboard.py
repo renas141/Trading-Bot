@@ -14,7 +14,7 @@ from unittest.mock import patch
 from app.market_data.datasets import save_dataset
 from backtesting.research import research
 from dashboard.data import ResearchStore, compress_equity
-from dashboard.server import handler_for
+from dashboard.server import handler_for, paper_status
 from tests.helpers import D, NOW
 from tests.test_strategy import trend_candles
 
@@ -23,9 +23,9 @@ def snapshot(root):
     return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob("*") if p.is_file()}
 
 
-def request(store, target="/api/catalog", *, method="GET", host="127.0.0.1:8765", headers=""):
+def request(store, target="/api/catalog", *, method="GET", host="127.0.0.1:8765", headers="", paper_root=None):
     """Exercise the actual HTTP handler without binding sockets in unit tests."""
-    handler_type = handler_for(store)
+    handler_type = handler_for(store, paper_root or Path("data/paper"))
     handler = object.__new__(handler_type)
     handler.server = SimpleNamespace(server_address=("127.0.0.1", 8765))
     handler.client_address = ("127.0.0.1", 12345)
@@ -66,6 +66,25 @@ class DashboardTests(unittest.TestCase):
         self.store.signals(self.run_id, 0, "all", "ALL")
         self.store.report(self.study["id"])
         self.assertEqual(snapshot(self.research), before)
+
+    def test_paper_status_is_read_only_and_rejects_live_or_malformed_state(self):
+        paper = self.root / "paper"
+        self.assertEqual(paper_status(paper)["status"], "not_started")
+        target = paper / "pf_xbtusd_realtime_observer"
+        target.mkdir(parents=True)
+        status = {"schema_version": 1, "status": "paused", "mode": "PAPER",
+                  "market": "PF_XBTUSD", "live_enabled": False, "quote_events": 3}
+        (target / "status.json").write_text(json.dumps(status))
+        before = snapshot(paper)
+        self.assertEqual(paper_status(paper)["quote_events"], 3)
+        code, _, body = request(self.store, "/api/paper", paper_root=paper)
+        self.assertEqual(code, 200)
+        self.assertEqual(json.loads(body)["display_name"], "Echtzeit-Beobachter")
+        self.assertEqual(snapshot(paper), before)
+        status["live_enabled"] = True
+        (target / "status.json").write_text(json.dumps(status))
+        with self.assertRaises(ValueError):
+            paper_status(paper)
 
     def test_trade_has_actual_entry_reasons_and_net_values(self):
         detail = self.store.run(self.run_id)

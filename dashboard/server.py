@@ -13,7 +13,35 @@ from dashboard.data import ResearchStore
 STATIC = {"/": ("index.html", "text/html"), "/app.js": ("app.js", "text/javascript"), "/style.css": ("style.css", "text/css")}
 
 
-def handler_for(store: ResearchStore):
+def paper_status(paper_root: Path) -> dict:
+    root = paper_root.resolve()
+    choices = (
+        ("pf_xbtusd_realtime_candidate", "Echtzeit-Kandidat"),
+        ("pf_xbtusd_realtime_observer", "Echtzeit-Beobachter"),
+        ("pf_xbtusd_funding_aware_v2", "Forward-Shadow-PAPER"),
+    )
+    for name, label in choices:
+        path = (root / name / "status.json").resolve()
+        if not path.is_relative_to(root) or not path.is_file():
+            continue
+        value = json.loads(path.read_text(encoding="utf-8"))
+        if (not isinstance(value, dict) or value.get("mode") != "PAPER"
+                or value.get("live_enabled") is not False
+                or value.get("market") != "PF_XBTUSD"):
+            raise ValueError("Invalid PAPER status")
+        return {**value, "display_name": label}
+    return {
+        "schema_version": 1, "status": "not_started", "mode": "PAPER",
+        "market": "PF_XBTUSD", "display_name": "Echtzeit-Beobachter",
+        "strategy_status": "not_started", "live_enabled": False,
+        "manual_kill_switch": False, "quote_events": 0, "balance": None,
+        "equity": None, "open_position": None, "closed_trades": 0,
+        "last_actions": [], "daily_halted": False, "drawdown_halted": False,
+        "model_limit": "Noch keine öffentliche Echtzeitbeobachtung gespeichert.",
+    }
+
+
+def handler_for(store: ResearchStore, paper_root: Path = Path("data/paper")):
     class Handler(BaseHTTPRequestHandler):
         def send(self, status, body: bytes, mime="application/json", download=False):
             self.send_response(status)
@@ -56,6 +84,8 @@ def handler_for(store: ResearchStore):
                     return
                 if target.path == "/api/catalog":
                     result = {"studies": store.catalog()[0]}
+                elif target.path == "/api/paper":
+                    result = paper_status(paper_root)
                 elif target.path == "/api/run":
                     result = store.run(parameter("run"))
                 elif target.path == "/api/trades":
@@ -90,12 +120,16 @@ def handler_for(store: ResearchStore):
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Local read-only research dashboard")
     parser.add_argument("--research-root", type=Path, default=Path("data/research"))
+    parser.add_argument("--paper-root", type=Path, default=Path("data/paper"))
     parser.add_argument("--port", type=int, default=8765)
     args = parser.parse_args(argv)
     if not 1024 <= args.port <= 65535:
         parser.error("Choose a port in 1024..65535")
     try:
-        with ThreadingHTTPServer(("127.0.0.1", args.port), handler_for(ResearchStore(args.research_root))) as server:
+        with ThreadingHTTPServer(
+            ("127.0.0.1", args.port),
+            handler_for(ResearchStore(args.research_root), args.paper_root),
+        ) as server:
             print(f"Forschungsübersicht: http://127.0.0.1:{args.port} (nur lesend)", flush=True)
             server.serve_forever()
     except KeyboardInterrupt:

@@ -22,6 +22,17 @@
   <main id="main">
     <header class="topbar"><span>Lokaler Arbeitsbereich <span class="divider">/</span> Forschung</span><button id="refresh" class="quiet-button">Neu laden <span aria-hidden="true">↻</span></button></header>
     <div class="page-heading"><div><h1 id="page-title">Forschungsübersicht</h1><p id="page-subtitle">Was die bisherigen Versuche zeigen.</p></div><a id="report-link" class="outline-button" hidden>Bericht herunterladen <span aria-hidden="true">↗</span></a></div>
+    <section id="paper-panel" class="panel paper-panel" aria-label="Echtzeit-Paperstatus">
+      <div class="panel-heading"><div><h2>Echtzeit-PAPER</h2><p id="paper-name" class="subtle">PF_XBTUSD · wird geladen</p></div><span id="paper-status" class="paper-badge">Lädt …</span></div>
+      <div class="paper-metrics">
+        <div><span>Virtuelles Kapital</span><strong id="paper-equity">—</strong><small id="paper-balance">Noch keine Session</small></div>
+        <div><span>Position</span><strong id="paper-position">Keine</strong><small id="paper-leverage">Maximal 10x</small></div>
+        <div><span>Beobachtungen</span><strong id="paper-events">0</strong><small id="paper-last-quote">Noch keine</small></div>
+        <div><span>Sicherheit</span><strong id="paper-safety">Gesperrt</strong><small id="paper-strategy">LIVE bleibt aus</small></div>
+      </div>
+      <p id="paper-actions" class="paper-actions">Öffentliche Kraken-Daten werden nur auf ausdrücklichen Start gelesen.</p>
+      <p id="paper-limit" class="footnote"></p>
+    </section>
     <div id="global-state" class="state-panel" role="status">Forschungsergebnisse werden geladen …</div>
     <div id="workspace" hidden>
       <section class="selection" aria-label="Auswertung auswählen">
