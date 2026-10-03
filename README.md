@@ -34,6 +34,9 @@ implementierte profitable Handelsstrategie**.
   mit Trade-/Mark-Kurs, Regime, Funding, aktuellem Kosten-Snapshot und
   komponentenübergreifender Integritätsprüfung,
   inklusive Herkunft, SHA-256-Prüfsummen und Qualitätsbericht.
+- ein ab 03.10.2026 vorab festgeschriebenes, funding-bewusstes Forward-Protokoll
+  mit getrenntem 30-Tage-Screen und anschließendem 60-Tage-Holdout; es kann nur
+  einen PAPER-Kandidaten erzeugen und aktiviert keinen Handel.
 - Prüfung auf Lücken und unvollständige Kerzen sowie chronologische Trennung
   in Entwicklungsdaten und spätere Holdout-Daten.
 - Optional wählbare Forschungsstrategie `trend_breakout` mit Trend-, Breakout-,
