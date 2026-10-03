@@ -253,9 +253,10 @@ für Strategie- oder Profitabilitätsaussagen.
 
 - `TRADING_MODE=LIVE` **oder** `ENABLE_LIVE_TRADING=true` verhindert den Start.
   Es gibt keinen Konfigurationsschalter, der echte Orders freischaltet.
-- API-Zugangsdaten werden nicht benötigt oder gelesen. Selbst gesetzte
-  Kraken-Zugangsdaten aktivieren keine private Verbindung oder Orderfunktion.
-  Der separate Download nutzt ausschließlich einen öffentlichen GET-Endpunkt.
+- Öffentliche Datenläufe benötigen keine API-Zugangsdaten. Ein separater
+  [nur-lesender Kraken-Derivate-Client](docs/kraken-futures-readonly.md) kann
+  später Kontorechte und Kontostand prüfen, akzeptiert ausschließlich
+  `READ_ONLY`/`NO_ACCESS` und besitzt keine Order- oder Transferfunktion.
 - Keine Zugangsdaten im Code, in Logs oder Git. `.env`, lokale Datenbanken und
   Logs sind ausgeschlossen. Spätere Secrets ausschließlich über Environment/.env.
 - Es werden keine Schlüssel erzeugt und keine Withdrawal-Rechte benötigt.
@@ -286,7 +287,8 @@ Forward-Paperlauf vorhanden. Der normale Spot-PaperBroker bleibt davon getrennt.
 
 ## Bewusst noch nicht implementiert
 
-- Private Exchange-Anbindung, echte Orders und API-Secrets.
+- Eine private Orderanbindung und echte Orders. Der vorhandene private
+  Kontozugriff ist strikt lesend; API-Secrets werden nicht gespeichert.
 - Ein unbeaufsichtigter WebSocket-Dauerfeed mit Tick-Markpreis. Der vorhandene
   Echtzeit-Paperbeobachter verwendet bewusst begrenzte öffentliche Analytics-Abrufe;
   der Forward-Paperlauf bleibt eine getrennte Shadow-Simulation.
@@ -392,13 +394,15 @@ Brokerpreise von den älteren Modellannahmen.
    vorab registrierten Studie einsetzen, weitere Marktphasen messen,
    vollständige historische Funding-Sätze suchen und erst danach einen
    PAPER-Perpetual-Feed ergänzen.
-3. **Brokerkonto prüfen:** EWR-Berechtigung, konkreten Marginplan, Collateral,
-   minimale Ordergröße und API-Rechte lesend verifizieren; echte Orders bleiben gesperrt.
+3. **Brokerkonto prüfen:** Der nur-lesende Client ist vorbereitet. Sobald ein
+   eng begrenzter Schlüssel vorliegt, EWR-Berechtigung, konkreten Marginplan,
+   Collateral, minimale Ordergröße und API-Rechte am Konto verifizieren; echte
+   Orders bleiben gesperrt.
 
-Die aktuelle [Derivate-Brokerprüfung](docs/derivative-broker-review-2026-09-24.md)
+Die [aktualisierte Derivate-Brokerentscheidung vom 04.10.2026](docs/derivative-broker-decision-2026-10-04.md)
 bestätigt Kraken als technisch passendsten Kandidaten für den vorhandenen
-PF_XBTUSD-Replay, dokumentiert aber auch die erforderliche EWR-Eignungsprüfung und
-eine derzeit nicht verlässlich bestätigte Demo-Umgebung.
+PF_XBTUSD-Replay. Die persönliche EWR-Berechtigung und eine verlässliche
+Demo-Umgebung sind weiterhin offen.
 
 Der langfristige Weg bleibt: historische Daten → Backtesting → Paper Trading →
 gesondert geprüfte Kraken-Demo/Testumgebung → erst wesentlich später optional LIVE.

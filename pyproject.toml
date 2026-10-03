@@ -19,6 +19,7 @@ trading-net-research = "backtesting.net_reward_research:main"
 trading-dashboard = "dashboard.server:main"
 trading-perpetual-paper = "app.derivatives.forward_paper:main"
 trading-perpetual-realtime-paper = "app.derivatives.realtime_paper:main"
+trading-kraken-readonly = "app.exchange.kraken_futures_readonly:main"
 
 [tool.setuptools.packages.find]
 include = ["app*", "backtesting*", "dashboard*"]
