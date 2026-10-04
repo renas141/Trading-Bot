@@ -1,12 +1,15 @@
 import base64
 import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from app.errors import ConfigurationError, MarketDataError
 from app.exchange.kraken_futures_readonly import (
     KrakenFuturesReadonlyClient,
     configuration_status,
     sign_request,
+    write_verified_summary,
 )
 
 
@@ -98,6 +101,24 @@ class KrakenFuturesReadonlyTests(unittest.TestCase):
     def test_unknown_endpoint_cannot_be_signed(self):
         with self.assertRaises(ConfigurationError):
             sign_request(SECRET, "/derivatives/api/v3/sendorder", "1")
+
+    def test_only_redacted_readonly_summary_can_be_written(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "summary.json"
+            summary = {
+                "mode": "read_only",
+                "permissions": {"general": "READ_ONLY", "transfer": "NO_ACCESS"},
+                "pf_xbtusd": {"accessible": True, "eligible": True},
+                "order_capability": False, "transfer_capability": False,
+                "api_secret": "must-never-be-written",
+            }
+            write_verified_summary(path, summary)
+            stored = json.loads(path.read_text())
+            self.assertEqual(stored["schema_version"], 1)
+            self.assertIn("verified_at", stored)
+            self.assertNotIn("secret", json.dumps(stored).lower())
+            with self.assertRaises(ConfigurationError):
+                write_verified_summary(path, {**summary, "order_capability": True})
 
 
 if __name__ == "__main__":

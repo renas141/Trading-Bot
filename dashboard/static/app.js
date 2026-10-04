@@ -77,6 +77,37 @@ async function loadPaper() {
   }
 }
 
+async function loadReadiness() {
+  try {
+    const report = await api("readiness");
+    const gate = report.gates.forward || {}, screen = gate.screen || {};
+    const labels = {
+      collecting_forward_screen: "Screen läuft", screen_ready_for_evaluation: "Screen auswerten",
+      collecting_holdout: "Holdout läuft", holdout_ready_for_evaluation: "Holdout auswerten",
+      paper_candidate: "PAPER-Kandidat", hypothesis_failed: "Hypothese beendet",
+      not_generated: "Nicht erzeugt"
+    };
+    text("readiness-status", labels[report.overall_status] || report.overall_status);
+    $("readiness-status").classList.toggle("warning", report.overall_status !== "paper_candidate");
+    text("readiness-screen", screen.required == null ? "—" : `${number.format(screen.collected)} / ${number.format(screen.required)}`);
+    text("readiness-progress", screen.progress_percent == null ? "Noch keine Daten" : `${number.format(screen.progress_percent)} % des vorab festgelegten Screens`);
+    $("readiness-progress-bar").style.width = `${Math.max(0, Math.min(100, Number(screen.progress_percent || 0)))}%`;
+    const contract = report.gates.public_contract || {};
+    text("readiness-contract", contract.verified ? "Bestätigt" : "Offen");
+    text("readiness-leverage", contract.maximum_leverage ? `${contract.maximum_leverage}x EWR-Obergrenze bestätigt` : "Vertragsdaten fehlen");
+    const account = report.gates.private_account || {};
+    text("readiness-account", account.verified ? "Bestätigt" : (account.configured ? "Prüfung ausstehend" : "Zugang fehlt"));
+    text("readiness-profit", report.profitability_proven ? "Holdout bestanden" : "Nicht bewiesen");
+    text("readiness-paper", report.paper_candidate ? "Für dauerhaftes PAPER qualifiziert" : "PAPER-Kandidat gesperrt");
+    text("readiness-blockers", (report.blockers || []).length ? report.blockers.join(" · ") : "Alle vorab festgelegten Prüfungen sind erfüllt.");
+    text("readiness-time", report.generated_at ? `Reifebericht vom ${dateTime.format(new Date(report.generated_at))} UTC · LIVE bleibt aus.` : "Noch kein Reifebericht vorhanden · LIVE bleibt aus.");
+  } catch (error) {
+    text("readiness-status", "Nicht lesbar");
+    $("readiness-status").classList.add("warning");
+    text("readiness-blockers", error.message);
+  }
+}
+
 async function loadCatalog() {
   const version = ++state.catalogVersion;
   ++state.runVersion;
@@ -282,7 +313,7 @@ function showSignal(item) {
   $("detail-dialog").showModal();
 }
 
-$("refresh").addEventListener("click", () => { loadCatalog(); loadPaper(); });
+$("refresh").addEventListener("click", () => { loadCatalog(); loadPaper(); loadReadiness(); });
 $("study").addEventListener("change", selectStudy); $("group").addEventListener("change", selectGroup);
 $("variant").addEventListener("change", loadRun); $("cost").addEventListener("change", loadRun);
 for (const button of document.querySelectorAll("[data-view]")) button.addEventListener("click", () => switchView(button.dataset.view));
@@ -298,3 +329,4 @@ const chartObserver = new ResizeObserver(() => { if (state.run && !$("overview-v
 chartObserver.observe($("chart"));
 loadCatalog();
 loadPaper();
+loadReadiness();

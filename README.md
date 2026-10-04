@@ -54,7 +54,8 @@ implementierte profitable Handelsstrategie**.
   dokumentierter Datenlücke und getrennten Auswertungen zusammenhängender Abschnitte.
 - Vergleichswerte für Nicht-Handeln und Kaufen-und-Halten mit denselben Kosten.
 - Lokale, lesende Forschungsübersicht mit Kontoverlauf, Trade-Journal,
-  Signalentscheidungen, Filtern und gespeicherten Berichten.
+  Signalentscheidungen, Filtern, gespeicherten Berichten und einem zentralen,
+  fehlersicher gesperrten [Bot-Reifebericht](docs/readiness.md).
 - Rotierende lokale Logs und Unit-/Integrationstests ohne externe Dienste.
 
 Der PAPER-Start verwendet weiterhin eine Policy, die jeden Trade ablehnt. BACKTEST
@@ -224,6 +225,9 @@ Der [Funding-Forward-Bericht](docs/perpetual-funding-forward-data-2026-09-24.md)
 beschreibt den ersten lückenlosen Stundentag und die Grenze der älteren Historie.
 Die [laufende Forward-Sammlung](docs/perpetual-forward-collection-2026-09-24.md)
 führt diese Daten nun gemeinsam mit Preisen, Regime und Ausführungskosten fort.
+Der [Bot-Reifebericht](docs/readiness.md) prüft Protokoll, Forward-Fortschritt,
+Vertragsdaten, PAPER-Sperre und den optionalen persönlichen Nur-Lese-Nachweis und
+zeigt die verbleibenden Einsatzhindernisse im Dashboard.
 
 ## Historische Kraken-Daten
 

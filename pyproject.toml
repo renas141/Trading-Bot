@@ -21,6 +21,7 @@ trading-perpetual-paper = "app.derivatives.forward_paper:main"
 trading-perpetual-realtime-paper = "app.derivatives.realtime_paper:main"
 trading-kraken-readonly = "app.exchange.kraken_futures_readonly:main"
 trading-kraken-instrument = "app.exchange.kraken_futures_instrument:main"
+trading-readiness = "app.readiness:main"
 
 [tool.setuptools.packages.find]
 include = ["app*", "backtesting*", "dashboard*"]

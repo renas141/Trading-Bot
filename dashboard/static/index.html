@@ -33,6 +33,18 @@
       <p id="paper-actions" class="paper-actions">Öffentliche Kraken-Daten werden nur auf ausdrücklichen Start gelesen.</p>
       <p id="paper-limit" class="footnote"></p>
     </section>
+    <section id="readiness-panel" class="panel readiness-panel" aria-label="Bot-Reifegrad">
+      <div class="panel-heading"><div><h2>Bot-Reifegrad</h2><p class="subtle">Was bereits geprüft ist und was den Einsatz noch sperrt.</p></div><span id="readiness-status" class="paper-badge warning">Lädt …</span></div>
+      <div class="readiness-grid">
+        <div><span>Forward-Screen</span><strong id="readiness-screen">—</strong><small id="readiness-progress">Noch keine Daten</small></div>
+        <div><span>Kraken-Vertrag</span><strong id="readiness-contract">—</strong><small id="readiness-leverage">Maximal 10x</small></div>
+        <div><span>Persönliches Konto</span><strong id="readiness-account">—</strong><small>Nur Lesen · keine Transfers</small></div>
+        <div><span>Profitabilität</span><strong id="readiness-profit">Nicht bewiesen</strong><small id="readiness-paper">PAPER-Kandidat gesperrt</small></div>
+      </div>
+      <div class="progress-track" aria-hidden="true"><span id="readiness-progress-bar"></span></div>
+      <p id="readiness-blockers" class="paper-actions">Reifebericht wird geladen …</p>
+      <p id="readiness-time" class="footnote"></p>
+    </section>
     <div id="global-state" class="state-panel" role="status">Forschungsergebnisse werden geladen …</div>
     <div id="workspace" hidden>
       <section class="selection" aria-label="Auswertung auswählen">

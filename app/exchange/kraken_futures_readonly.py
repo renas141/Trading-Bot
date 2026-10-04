@@ -16,6 +16,8 @@ import os
 import sys
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Callable
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
@@ -215,10 +217,42 @@ def configuration_status(environ: dict[str, str] | None = None) -> dict:
     }
 
 
+def write_verified_summary(path: Path, summary: dict) -> None:
+    """Persist only the redacted verification result, never credentials or raw replies."""
+    value = {
+        "schema_version": 1,
+        "verified_at": datetime.now(timezone.utc).isoformat(),
+        "mode": summary.get("mode"),
+        "permissions": summary.get("permissions"),
+        "account_count": summary.get("account_count"),
+        "open_position_count": summary.get("open_position_count"),
+        "fill_count": summary.get("fill_count"),
+        "accessible_instrument_count": summary.get("accessible_instrument_count"),
+        "pf_xbtusd": summary.get("pf_xbtusd"),
+        "order_capability": summary.get("order_capability"),
+        "transfer_capability": summary.get("transfer_capability"),
+    }
+    if (value.get("mode") != "read_only"
+            or value.get("permissions") != {
+                "general": "READ_ONLY", "transfer": "NO_ACCESS"
+            }
+            or value.get("order_capability") is not False
+            or value.get("transfer_capability") is not False):
+        raise ConfigurationError("Refusing to persist an invalid read-only verification")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Inspect Kraken Derivatives in read-only mode")
     parser.add_argument("command", choices=("status", "verify"))
+    parser.add_argument("--output", type=Path,
+                        help="Store a redacted verification summary (verify only)")
     args = parser.parse_args(argv)
+    if args.command == "status" and args.output is not None:
+        parser.error("--output is available only with verify")
     status = configuration_status()
     if args.command == "status":
         print(json.dumps(status, indent=2))
@@ -231,7 +265,10 @@ def main(argv=None) -> int:
             os.environ["KRAKEN_FUTURES_API_KEY"],
             os.environ["KRAKEN_FUTURES_API_SECRET"],
         )
-        print(json.dumps(client.account_snapshot().summary(), indent=2))
+        summary = client.account_snapshot().summary()
+        if args.output is not None:
+            write_verified_summary(args.output, summary)
+        print(json.dumps(summary, indent=2))
         return 0
     except (ConfigurationError, MarketDataError) as exc:
         print(f"Kraken read-only verification failed: {exc}", file=sys.stderr)

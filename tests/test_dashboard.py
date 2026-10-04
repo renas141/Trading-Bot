@@ -14,7 +14,7 @@ from unittest.mock import patch
 from app.market_data.datasets import save_dataset
 from backtesting.research import research
 from dashboard.data import ResearchStore, compress_equity
-from dashboard.server import handler_for, paper_status
+from dashboard.server import handler_for, paper_status, readiness_status
 from tests.helpers import D, NOW
 from tests.test_strategy import trend_candles
 
@@ -23,9 +23,11 @@ def snapshot(root):
     return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob("*") if p.is_file()}
 
 
-def request(store, target="/api/catalog", *, method="GET", host="127.0.0.1:8765", headers="", paper_root=None):
+def request(store, target="/api/catalog", *, method="GET", host="127.0.0.1:8765", headers="", paper_root=None,
+            readiness_path=None):
     """Exercise the actual HTTP handler without binding sockets in unit tests."""
-    handler_type = handler_for(store, paper_root or Path("data/paper"))
+    handler_type = handler_for(store, paper_root or Path("data/paper"),
+                               readiness_path or Path("data/readiness/status.json"))
     handler = object.__new__(handler_type)
     handler.server = SimpleNamespace(server_address=("127.0.0.1", 8765))
     handler.client_address = ("127.0.0.1", 12345)
@@ -85,6 +87,28 @@ class DashboardTests(unittest.TestCase):
         (target / "status.json").write_text(json.dumps(status))
         with self.assertRaises(ValueError):
             paper_status(paper)
+
+    def test_readiness_status_is_read_only_and_rejects_live(self):
+        path = self.root / "readiness.json"
+        report = {
+            "schema_version": 1, "market": "PF_XBTUSD",
+            "overall_status": "collecting_forward_screen",
+            "profitability_proven": False, "paper_candidate": False,
+            "live_enabled": False, "gates": {"forward": {}},
+            "blockers": ["screen"], "user_actions": [],
+            "generated_at": "2026-10-04T00:00:00+00:00",
+        }
+        path.write_text(json.dumps(report))
+        before = path.read_bytes()
+        self.assertEqual(readiness_status(path), report)
+        code, _, body = request(self.store, "/api/readiness", readiness_path=path)
+        self.assertEqual(code, 200)
+        self.assertEqual(json.loads(body)["overall_status"], "collecting_forward_screen")
+        self.assertEqual(path.read_bytes(), before)
+        report["live_enabled"] = True
+        path.write_text(json.dumps(report))
+        with self.assertRaises(ValueError):
+            readiness_status(path)
 
     def test_trade_has_actual_entry_reasons_and_net_values(self):
         detail = self.store.run(self.run_id)

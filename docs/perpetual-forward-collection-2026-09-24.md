@@ -55,10 +55,10 @@ dienen die Pakete nur dem Aufbau eines unabhängigen Forward-Zeitraums.
 
 ## Manueller Stand am 04.10.2026
 
-Die beiden einmaligen Nachholungen am 04.10.2026 haben zwei weitere abgeschlossene
-Blöcke erstellt. Damit liegen 58 lückenlose und vollständig per Prüfsumme
-bestätigte Pakete vom 24.09.2026, 08:00 UTC bis 04.10.2026, 00:00 UTC vor. Davon
-gehören 55 Pakete zum vorab ausgeschlossenen Integritätszeitraum und drei zum neuen
+Die manuellen Nachholungen am 04.10.2026 haben vier weitere abgeschlossene Blöcke
+erstellt. Damit liegen 60 lückenlose und vollständig per Prüfsumme bestätigte
+Pakete vom 24.09.2026, 08:00 UTC bis 04.10.2026, 08:00 UTC vor. Davon gehören
+55 Pakete zum vorab ausgeschlossenen Integritätszeitraum und fünf zum neuen
 Forward-Screen. Für eine Screen-Auswertung werden unverändert 180 neue Pakete
 bis voraussichtlich 02.11.2026, 12:00 UTC benötigt. Es wurde keine geplante oder
 wiederkehrende Aufgabe eingerichtet.

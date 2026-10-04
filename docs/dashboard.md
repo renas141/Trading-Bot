@@ -60,6 +60,13 @@ Kill Switch sowie Tagesverlust- und Drawdown-Sperren. Fehlt eine Session, zeigt
 die Karte ausdrücklich „Noch nicht gestartet“ und erfindet keine Werte. Bedienung
 und Grenzen stehen unter [PF_XBTUSD-Echtzeit-PAPER](perpetual-realtime-paper.md).
 
+Eine zweite Karte zeigt den [Bot-Reifebericht](readiness.md): Stand des
+vorab festgelegten Forward-Screens, bestätigte Vertrags- und Hebelgrenze,
+persönlichen Nur-Lese-Zugang, Profitabilitätsnachweis und alle derzeitigen
+Sperrgründe. Die Anzeige liest `data/readiness/status.json` und aktualisiert sich
+mit „Neu laden“. Sie startet keine Sammlung oder Auswertung und kann keine
+Handelsfreigabe ändern.
+
 ## Lesender Zugriff
 
 Quelle ist `data/research/`. Unterstützt werden `fixed-hypothesis-v1` und

@@ -8,6 +8,7 @@ from importlib.resources import files
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
+from app.readiness import validate_report
 from dashboard.data import ResearchStore
 
 STATIC = {"/": ("index.html", "text/html"), "/app.js": ("app.js", "text/javascript"), "/style.css": ("style.css", "text/css")}
@@ -41,7 +42,21 @@ def paper_status(paper_root: Path) -> dict:
     }
 
 
-def handler_for(store: ResearchStore, paper_root: Path = Path("data/paper")):
+def readiness_status(path: Path) -> dict:
+    if not path.is_file():
+        return {
+            "schema_version": 1, "market": "PF_XBTUSD", "overall_status": "not_generated",
+            "profitability_proven": False, "paper_candidate": False, "live_enabled": False,
+            "gates": {}, "blockers": ["Reifebericht wurde noch nicht erzeugt"],
+            "user_actions": [], "generated_at": None,
+        }
+    if path.stat().st_size > 1_000_000:
+        raise ValueError("Readiness report is too large")
+    return validate_report(json.loads(path.read_text(encoding="utf-8")))
+
+
+def handler_for(store: ResearchStore, paper_root: Path = Path("data/paper"),
+                readiness_path: Path = Path("data/readiness/status.json")):
     class Handler(BaseHTTPRequestHandler):
         def send(self, status, body: bytes, mime="application/json", download=False):
             self.send_response(status)
@@ -86,6 +101,8 @@ def handler_for(store: ResearchStore, paper_root: Path = Path("data/paper")):
                     result = {"studies": store.catalog()[0]}
                 elif target.path == "/api/paper":
                     result = paper_status(paper_root)
+                elif target.path == "/api/readiness":
+                    result = readiness_status(readiness_path)
                 elif target.path == "/api/run":
                     result = store.run(parameter("run"))
                 elif target.path == "/api/trades":
@@ -121,6 +138,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Local read-only research dashboard")
     parser.add_argument("--research-root", type=Path, default=Path("data/research"))
     parser.add_argument("--paper-root", type=Path, default=Path("data/paper"))
+    parser.add_argument("--readiness", type=Path, default=Path("data/readiness/status.json"))
     parser.add_argument("--port", type=int, default=8765)
     args = parser.parse_args(argv)
     if not 1024 <= args.port <= 65535:
@@ -128,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         with ThreadingHTTPServer(
             ("127.0.0.1", args.port),
-            handler_for(ResearchStore(args.research_root), args.paper_root),
+            handler_for(ResearchStore(args.research_root), args.paper_root, args.readiness),
         ) as server:
             print(f"Forschungsübersicht: http://127.0.0.1:{args.port} (nur lesend)", flush=True)
             server.serve_forever()
