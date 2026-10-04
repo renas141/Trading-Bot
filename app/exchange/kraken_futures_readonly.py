@@ -31,6 +31,7 @@ READ_ONLY_ENDPOINTS = {
     "accounts": "/derivatives/api/v3/accounts",
     "open_positions": "/derivatives/api/v3/openpositions",
     "fills": "/derivatives/api/v3/fills",
+    "trading_instruments": "/derivatives/api/v3/trading/instruments",
 }
 
 
@@ -86,8 +87,12 @@ class ReadonlyAccountSnapshot:
     accounts: dict = field(repr=False)
     open_positions: tuple[dict, ...] = field(repr=False)
     fills: tuple[dict, ...] = field(repr=False)
+    trading_instruments: tuple[dict, ...] = field(repr=False)
 
     def summary(self) -> dict:
+        matches = [item for item in self.trading_instruments
+                   if item.get("symbol") == "PF_XBTUSD"]
+        instrument = matches[0] if len(matches) == 1 else None
         return {
             "mode": "read_only",
             "permissions": {
@@ -97,6 +102,22 @@ class ReadonlyAccountSnapshot:
             "account_count": len(self.accounts),
             "open_position_count": len(self.open_positions),
             "fill_count": len(self.fills),
+            "accessible_instrument_count": len(self.trading_instruments),
+            "pf_xbtusd": {
+                "accessible": instrument is not None,
+                "eligible": (
+                    instrument is not None
+                    and instrument.get("restricted") is False
+                    and instrument.get("isExpired") is False
+                ),
+                "minimum_trade_size": (
+                    str(instrument.get("minimumTradeSize"))
+                    if instrument is not None and instrument.get("minimumTradeSize") is not None
+                    else None
+                ),
+                "restricted": instrument.get("restricted") if instrument is not None else None,
+                "expired": instrument.get("isExpired") if instrument is not None else None,
+            },
             "order_capability": False,
             "transfer_capability": False,
         }
@@ -163,16 +184,20 @@ class KrakenFuturesReadonlyClient:
         accounts_payload = self._get("accounts")
         positions_payload = self._get("open_positions")
         fills_payload = self._get("fills")
+        instruments_payload = self._get("trading_instruments")
         accounts = accounts_payload.get("accounts")
         positions = positions_payload.get("openPositions")
         fills = fills_payload.get("fills")
+        instruments = instruments_payload.get("instruments")
         if (accounts_payload.get("result") != "success" or not isinstance(accounts, dict)
                 or positions_payload.get("result") != "success" or not isinstance(positions, list)
                 or fills_payload.get("result") != "success" or not isinstance(fills, list)
-                or not all(isinstance(item, dict) for item in positions + fills)):
+                or instruments_payload.get("result") != "success"
+                or not isinstance(instruments, list)
+                or not all(isinstance(item, dict) for item in positions + fills + instruments)):
             raise MarketDataError("Kraken account response has an unexpected shape")
         return ReadonlyAccountSnapshot(
-            general, transfer, accounts, tuple(positions), tuple(fills)
+            general, transfer, accounts, tuple(positions), tuple(fills), tuple(instruments)
         )
 
 

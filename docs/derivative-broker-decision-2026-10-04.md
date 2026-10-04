@@ -60,7 +60,7 @@ Transferrechte. Der Bot akzeptiert davon nur die engste Kombination
 | Rein lesende Kontoschnittstelle | fertig und getestet |
 | Persönlicher EWR-Derivatezugang | ohne Konto noch offen |
 | Persönlicher Marginplan und Collateral | ohne Konto noch offen |
-| Aktuelle Demo-Umgebung | nicht belastbar bestätigt |
+| Aktuelle Demo-Umgebung | alter Host abgeschaltet; kein Demo-Client möglich |
 | Unabhängiger Forward-Screen | noch nicht genügend Daten |
 | Unabhängiger Holdout | noch nicht begonnen |
 | Echte Orderanbindung | nicht vorhanden und gesperrt |
@@ -68,3 +68,19 @@ Transferrechte. Der Bot akzeptiert davon nur die engste Kombination
 Die Reihenfolge bleibt daher: Forward-Daten sammeln, Screen und Holdout bestehen,
 lang laufendes PAPER prüfen, persönliche Leseberechtigung verifizieren und erst
 danach eine bestätigte Demo-Umgebung untersuchen. LIVE bleibt gesperrt.
+
+## Ergänzung: Vertrag und Demo-Umgebung
+
+Der erneute [öffentliche Vertragsabruf vom 04.10.2026](kraken-pf-xbtusd-contract-2026-10-04.md)
+bestätigt Preisschritt, Mengenpräzision und die 10x/10 %/5 %-Annahmen des lokalen
+EWR-Retail-Modells. Die konkrete Mindestordergröße wird öffentlich nicht geliefert
+und bleibt deshalb Teil der späteren persönlichen Lesekontrolle.
+
+Die frühere Demo-Umgebung kann nicht weiterverwendet werden. Krakens eigene, am
+07.07.2026 aktualisierte [Demo-Seite](https://support.kraken.com/articles/360024809011-api-testing-environment-derivatives)
+nennt die Abschaltung zum 14.07.2026, enthält daneben aber noch die alte Anleitung.
+Beim erneuten Direktabruf am 04.10.2026 leitete selbst der dokumentierte
+`/derivatives/api/v3/tickers`-Endpunkt auf die normale Kraken-Produktseite um.
+Damit wird kein Demo-Client gegen diesen Host gebaut. Nach bestandenem Forward-
+Holdout muss Kraken eine neue offizielle Testumgebung nennen; andernfalls bleibt
+die nächste Stufe ein länger laufender lokaler PAPER-Betrieb.

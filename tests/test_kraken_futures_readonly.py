@@ -34,8 +34,13 @@ class KrakenFuturesReadonlyTests(unittest.TestCase):
                 value = {"result": "success", "accounts": {"flex": {"type": "test"}}}
             elif url.endswith("/openpositions"):
                 value = {"result": "success", "openPositions": []}
-            else:
+            elif url.endswith("/fills"):
                 value = {"result": "success", "fills": [{"symbol": "PF_XBTUSD"}]}
+            else:
+                value = {"result": "success", "instruments": [{
+                    "symbol": "PF_XBTUSD", "minimumTradeSize": 0.0001,
+                    "restricted": False, "isExpired": False,
+                }]}
             return json.dumps(value).encode()
 
         client = KrakenFuturesReadonlyClient(
@@ -44,8 +49,11 @@ class KrakenFuturesReadonlyTests(unittest.TestCase):
         snapshot = client.account_snapshot()
         self.assertEqual(snapshot.summary()["account_count"], 1)
         self.assertEqual(snapshot.summary()["fill_count"], 1)
+        self.assertTrue(snapshot.summary()["pf_xbtusd"]["accessible"])
+        self.assertTrue(snapshot.summary()["pf_xbtusd"]["eligible"])
+        self.assertEqual(snapshot.summary()["pf_xbtusd"]["minimum_trade_size"], "0.0001")
         self.assertFalse(snapshot.summary()["order_capability"])
-        self.assertEqual(len(calls), 4)
+        self.assertEqual(len(calls), 5)
         for url, headers in calls:
             self.assertTrue(url.startswith("https://futures.kraken.com/"))
             self.assertEqual(headers["APIKey"], "public-key")
@@ -72,6 +80,7 @@ class KrakenFuturesReadonlyTests(unittest.TestCase):
             {"result": "success", "accounts": []},
             {"result": "success", "openPositions": []},
             {"result": "success", "fills": []},
+            {"result": "success", "instruments": []},
         ])
         client = KrakenFuturesReadonlyClient(
             "key", SECRET,

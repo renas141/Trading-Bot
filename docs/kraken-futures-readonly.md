@@ -7,12 +7,14 @@ Hebeleinstellung verändern.
 
 ## Sicherheitsgrenze
 
-Der Client akzeptiert ausschließlich vier fest eingebaute `GET`-Endpunkte:
+Der Client akzeptiert ausschließlich fünf fest eingebaute `GET`-Endpunkte:
 
 - API-Schlüsselrechte;
 - Konten und Wallets;
 - offene Positionen;
-- eigene Ausführungen.
+- eigene Ausführungen;
+- die für das konkrete Konto zugänglichen Instrumente samt Mindestgröße und
+  Einschränkungsstatus.
 
 Vor dem Lesen des Kontos wird der Schlüssel selbst geprüft. Zulässig ist nur
 `general = READ_ONLY` zusammen mit `transfer = NO_ACCESS`. Ein Schlüssel mit
@@ -31,6 +33,8 @@ bestätigt. Die erlaubten Inhalte entsprechen Krakens Dokumentation für
 [Wallets](https://docs.kraken.com/api-reference/account-information/get-wallets),
 [offene Positionen](https://docs.kraken.com/api-reference/account-information/get-open-positions)
 und [eigene Ausführungen](https://docs.kraken.com/api-reference/historical-data/get-your-fills).
+Die persönliche Produktfreigabe und Mindestgröße stammen später aus
+[Get trading instruments](https://docs.kraken.com/api-reference/instrument-details/get-trading-instruments).
 
 ## Lokaler Status
 
@@ -46,13 +50,14 @@ aktuellen Prozess vorhanden sein:
 - `KRAKEN_FUTURES_API_KEY`
 - `KRAKEN_FUTURES_API_SECRET`
 
-Danach führt `verify` die Rechteprüfung und die drei Lesezugriffe aus:
+Danach führt `verify` die Rechteprüfung und vier Konto-Lesezugriffe aus:
 
 ```bash
 .venv/bin/python -m app.exchange.kraken_futures_readonly verify
 ```
 
-Die Ausgabe enthält nur die bestätigten Rechte und Anzahlen von Konten,
-Positionen und Ausführungen. Sie enthält keine Schlüssel und keine Guthaben.
+Die Ausgabe enthält nur die bestätigten Rechte, Anzahlen von Konten, Positionen
+und Ausführungen sowie Zugänglichkeit, Mindestgröße und Einschränkungsstatus von
+`PF_XBTUSD`. Sie enthält keine Schlüssel und keine Guthaben.
 Aktuell sind keine Zugangsdaten eingerichtet; deshalb ist die technische
 Anbindung fertig, aber die persönliche Kraken-Berechtigung noch nicht bestätigt.

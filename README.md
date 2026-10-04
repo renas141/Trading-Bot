@@ -402,7 +402,10 @@ Brokerpreise von den älteren Modellannahmen.
 Die [aktualisierte Derivate-Brokerentscheidung vom 04.10.2026](docs/derivative-broker-decision-2026-10-04.md)
 bestätigt Kraken als technisch passendsten Kandidaten für den vorhandenen
 PF_XBTUSD-Replay. Die persönliche EWR-Berechtigung und eine verlässliche
-Demo-Umgebung sind weiterhin offen.
+Testumgebung sind weiterhin offen. Der erneute
+[öffentliche Vertragsabruf](docs/kraken-pf-xbtusd-contract-2026-10-04.md)
+bestätigt die lokalen Tick-, Mengen-, Margin- und 10x-Annahmen; der alte Demo-Host
+ist abgeschaltet.
 
 Der langfristige Weg bleibt: historische Daten → Backtesting → Paper Trading →
 gesondert geprüfte Kraken-Demo/Testumgebung → erst wesentlich später optional LIVE.
