@@ -26,6 +26,7 @@ from app.derivatives.forward_paper import (
     _settings,
     verify_paper_gate,
 )
+from app.derivatives.execution_quality import ExecutionQualityGate, ExecutionQuote
 from app.derivatives.observed_costs import load_observed_cost_scenario
 from app.derivatives.risk import LeveragedRiskManager
 from app.derivatives.settings import DerivativeSettings
@@ -68,6 +69,7 @@ class CandidateObservation:
     bundle_manifest_sha256: str | None = None
     skipped_candles: int = 0
     note: str | None = None
+    reference_price: Decimal | None = None
 
 
 def _hold(at: datetime) -> Signal:
@@ -143,7 +145,8 @@ def _tier(notional: Decimal) -> str | None:
 
 
 def _entry_decision(manager: LeveragedRiskManager, signal: Signal, broker, risk,
-                    settings: DerivativeSettings, snapshot: AnalyticsSnapshot):
+                    settings: DerivativeSettings, snapshot: AnalyticsSnapshot,
+                    planned_reference: Decimal):
     reference = snapshot.ask if signal.direction == Direction.LONG else snapshot.bid
     account = broker.snapshot((snapshot.bid + snapshot.ask) / 2)
     context = risk.observe(settings, reference, snapshot.received_at, account.equity)
@@ -168,6 +171,19 @@ def _entry_decision(manager: LeveragedRiskManager, signal: Signal, broker, risk,
         decision = manager.evaluate(signal, account, context)
         if not decision.allowed:
             return decision, tier
+    slippage = snapshot.slippage_bps.get(
+        f"{'buy' if signal.direction == Direction.LONG else 'sell'}_{tier}"
+    ) if tier else None
+    if slippage is None:
+        return replace(decision, allowed=False,
+                       reasons=("Observed execution slippage is unavailable for this size.",)), tier
+    quality = ExecutionQualityGate().evaluate(
+        signal.direction, planned_reference, decision.stop_price,
+        ExecutionQuote(snapshot.bid, snapshot.ask, snapshot.received_at, slippage),
+        settings.fee_rate, snapshot.received_at,
+    )
+    if not quality.allowed:
+        return replace(decision, allowed=False, reasons=quality.reasons), tier
     return decision, tier
 
 
@@ -221,6 +237,7 @@ def candidate_observation(forward_root: Path, state: dict, now: datetime) -> Can
         signal, latest.closed_at, funding, path.name,
         _file_sha(path / "bundle.json"), max(0, len(fresh_indices) - 1),
         "Missed completed candles were not backfilled as entries." if len(fresh_indices) > 1 else None,
+        latest.close,
     )
 
 
@@ -278,8 +295,13 @@ def process_snapshot(state: dict, settings: DerivativeSettings, snapshot: Analyt
                 actions.append("ENTRY_REJECTED: Closed-candle signal is stale.")
             elif broker.snapshot(midpoint).position is not None:
                 actions.append("ENTRY_REJECTED: A derivative position is already open.")
+            elif observation.reference_price is None:
+                actions.append("ENTRY_REJECTED: Completed-candle reference price is unavailable.")
             else:
-                decision, tier = _entry_decision(manager, signal, broker, risk, settings, snapshot)
+                decision, tier = _entry_decision(
+                    manager, signal, broker, risk, settings, snapshot,
+                    observation.reference_price,
+                )
                 if decision.allowed:
                     opened = broker.open_position(signal, decision, snapshot.received_at)
                     state["position_bars_held"] = 0

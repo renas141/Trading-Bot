@@ -45,6 +45,11 @@ implementierte profitable Handelsstrategie**.
   der bei drei von vier Marktbestätigungen kleiner und nur bei vollständiger
   Bestätigung risikoreicher handelt; seine zweite Margin-Generation berücksichtigt
   Kurslücken, Funding, Liquidationsgebühr und freie Reserve dynamisch bis 10x.
+- einen begrenzten PF_XBTUSD-Historienabruf mit Pagination, Prüfsummen und
+  lückenloser Trade-/Mark-Abstimmung sowie eine getrennte
+  [2026-Entwicklungsdiagnose](docs/market-data-and-execution-quality-2026-10-06.md),
+- eine vorgeschaltete Ausführungsprüfung, die alte oder stark abweichende Quotes,
+  breite Spreads und ein zu schlechtes Kosten-/Stop-Verhältnis ablehnt.
 - einen begrenzt gestarteten, wiederaufnehmbaren PF_XBTUSD-Echtzeit-Paperbeobachter
   mit öffentlichen Bid-/Ask-Kursen, Ausführungstiefe, Datenalterprüfung, manuellem
   Kill Switch und Dashboardstatus. Bis zum bestandenen Holdout ist NoTrade fest

@@ -48,15 +48,22 @@ nur Rechte, Zähler, Zugänglichkeit und Berechtigung für PF_XBTUSD sowie die
 persönliche Mindestmenge. Rohantworten, Kontosalden, Positionen, Fills, Schlüssel
 und Secret werden nicht gespeichert.
 
-## Aktueller Stand am 05.10.2026
+## Aktueller Stand am 06.10.2026
 
-- 67 lückenlose Pakete bis 12:00 UTC, davon 55 vorab ausgeschlossen;
-- 12 von 180 neuen Screen-Blöcken, entsprechend 6,67 Prozent;
+- 69 lückenlose Pakete bis 20:00 UTC, davon 55 vorab ausgeschlossen;
+- 14 von 180 neuen Screen-Blöcken, entsprechend 7,78 Prozent;
 - Screen frühestens nach dem Block bis 02.11.2026, 12:00 UTC auswertbar;
 - der 360-Blöcke-Holdout darf nur nach bestandenem Screen geöffnet werden;
 - öffentlicher PF_XBTUSD-Vertrag und 10x-Obergrenze bestätigt;
 - persönlicher Lesezugang noch nicht bestätigt;
 - Profitabilität nicht nachgewiesen, kein PAPER-Kandidat, LIVE gesperrt.
+
+Für zusätzliche Entwicklung wurden 1.599 lückenlose PF_XBTUSD-Trade- und
+Mark-Kerzen aus 2026 geladen. Die getrennte Diagnose war in beiden Kostenfällen
+positiv, wird aber als gesehene Entwicklungsperiode behandelt und zählt nicht als
+Forward-Nachweis. Vor einem späteren PAPER-Einstieg prüft ein zusätzlicher Gate
+Quote-Alter, Spread, Kursabweichung und das Verhältnis der erwarteten
+Ausführungskosten zum Stop-Abstand.
 
 Zusätzlich zeigt der Bericht den getrennten
 [adaptiven Paralleltest](adaptive-leverage-safety-2026-10-05.md). Dessen Regeln

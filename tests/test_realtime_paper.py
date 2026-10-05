@@ -24,7 +24,7 @@ D = Decimal
 NOW = datetime(2027, 1, 2, 12, 2, tzinfo=timezone.utc)
 
 
-def snapshot(*, at=NOW, bid="99", ask="100"):
+def snapshot(*, at=NOW, bid="99.99", ask="100.01"):
     executions = {}
     for size in ("1k", "10k", "100k", "1m"):
         executions[f"sell_{size}"] = D(bid)
@@ -68,7 +68,8 @@ class RealtimePaperTests(unittest.TestCase):
         state = _new_realtime_state(self.settings, NOW - timedelta(hours=1))
         state["activated_at"] = (NOW - timedelta(hours=1)).isoformat()
         observation = CandidateObservation(
-            long_signal(), NOW - timedelta(minutes=1), D("0"), "bundle", "hash"
+            long_signal(), NOW - timedelta(minutes=1), D("0"), "bundle", "hash",
+            reference_price=D("100"),
         )
         actions = process_snapshot(
             state, self.settings, snapshot(), observation, manual_halt=False,
@@ -95,6 +96,19 @@ class RealtimePaperTests(unittest.TestCase):
         self.assertIn("ENTRY_REJECTED: Manual kill switch is active.", actions)
         self.assertIsNone(state["position"])
         self.assertEqual(state["quote_events"], 1)
+
+    def test_execution_quality_rejects_a_wide_quote(self):
+        state = _new_realtime_state(self.settings, NOW - timedelta(hours=1))
+        state["activated_at"] = (NOW - timedelta(hours=1)).isoformat()
+        actions = process_snapshot(
+            state, self.settings, snapshot(bid="99", ask="101"),
+            CandidateObservation(
+                long_signal(), NOW - timedelta(minutes=1), reference_price=D("100")
+            ),
+            manual_halt=False,
+        )
+        self.assertTrue(any("spread" in action.lower() for action in actions))
+        self.assertIsNone(state["position"])
 
     def test_signal_must_match_fresh_candle(self):
         state = _new_realtime_state(self.settings, NOW - timedelta(hours=1))
