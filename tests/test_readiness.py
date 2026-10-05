@@ -32,6 +32,8 @@ class ReadinessTests(unittest.TestCase):
         self.instrument.mkdir()
         self.paper = self.root / "paper"
         self.account_summary = self.root / "account-summary.json"
+        self.adaptive_protocol = self.root / "adaptive" / "protocol.json"
+        self.adaptive_amendment = self.root / "adaptive" / "amendment.json"
         observer = self.paper / "pf_xbtusd_realtime_observer"
         observer.mkdir(parents=True)
         (observer / "status.json").write_text(json.dumps({
@@ -41,6 +43,7 @@ class ReadinessTests(unittest.TestCase):
         self.paths = ReadinessPaths(
             self.forward, self.protocol, self.cost_candidate, self.cost_summary,
             self.instrument, self.paper, self.account_summary,
+            self.adaptive_protocol, self.adaptive_amendment,
         )
 
     def _make_bundles(self, count=58):

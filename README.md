@@ -41,6 +41,10 @@ implementierte profitable Handelsstrategie**.
   bestandenen, per SHA-256 gebundenen Ergebnisstufen startet, jeden neuen
   Vierstundenblock erneut prüft und Konto, Position, Funding, Stops, Verlustsperren
   und eine verkettete Ereignishistorie speichert.
+- einen getrennt eingefrorenen [adaptiven Paralleltest](docs/adaptive-leverage-safety-2026-10-05.md),
+  der bei drei von vier Marktbestätigungen kleiner und nur bei vollständiger
+  Bestätigung risikoreicher handelt; seine zweite Margin-Generation berücksichtigt
+  Kurslücken, Funding, Liquidationsgebühr und freie Reserve dynamisch bis 10x.
 - einen begrenzt gestarteten, wiederaufnehmbaren PF_XBTUSD-Echtzeit-Paperbeobachter
   mit öffentlichen Bid-/Ask-Kursen, Ausführungstiefe, Datenalterprüfung, manuellem
   Kill Switch und Dashboardstatus. Bis zum bestandenen Holdout ist NoTrade fest

@@ -99,6 +99,9 @@ async function loadReadiness() {
     text("readiness-account", account.verified ? "Bestätigt" : (account.configured ? "Prüfung ausstehend" : "Zugang fehlt"));
     text("readiness-profit", report.profitability_proven ? "Holdout bestanden" : "Nicht bewiesen");
     text("readiness-paper", report.paper_candidate ? "Für dauerhaftes PAPER qualifiziert" : "PAPER-Kandidat gesperrt");
+    const adaptive = report.gates.adaptive_candidate || {};
+    text("readiness-adaptive", adaptive.required == null ? "—" : `${number.format(adaptive.collected || 0)} / ${number.format(adaptive.required)}`);
+    text("readiness-adaptive-note", adaptive.verified ? "Getrennt eingefroren · 0,5 % / 1,25 % Risiko" : "Protokoll nicht bestätigt");
     text("readiness-blockers", (report.blockers || []).length ? report.blockers.join(" · ") : "Alle vorab festgelegten Prüfungen sind erfüllt.");
     text("readiness-time", report.generated_at ? `Reifebericht vom ${dateTime.format(new Date(report.generated_at))} UTC · LIVE bleibt aus.` : "Noch kein Reifebericht vorhanden · LIVE bleibt aus.");
   } catch (error) {

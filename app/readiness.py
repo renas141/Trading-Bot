@@ -20,6 +20,11 @@ from backtesting.perpetual_forward_research import (
     TOTAL_BLOCKS,
     read_protocol,
 )
+from backtesting.adaptive_forward_protocol_v2 import (
+    FORWARD_START as ADAPTIVE_FORWARD_START,
+    SCREEN_BLOCKS as ADAPTIVE_SCREEN_BLOCKS,
+    read_protocol as read_adaptive_protocol,
+)
 
 
 @dataclass(frozen=True)
@@ -31,6 +36,8 @@ class ReadinessPaths:
     instrument_snapshot: Path
     paper_root: Path
     account_summary: Path
+    adaptive_protocol: Path
+    adaptive_amendment: Path
 
 
 DEFAULT_PATHS = ReadinessPaths(
@@ -41,6 +48,8 @@ DEFAULT_PATHS = ReadinessPaths(
     Path("data/evidence/kraken_derivatives_20261004"),
     Path("data/paper"),
     Path("data/evidence/kraken-readonly/account-summary.json"),
+    Path("data/research/perpetual_adaptive_forward_20261005_v2/protocol.json"),
+    Path("data/research/perpetual_adaptive_forward_20261005_v2/protocol.json"),
 )
 
 
@@ -157,6 +166,42 @@ def _private_account(path: Path, configured: dict) -> dict:
     return result
 
 
+def _adaptive_candidate(paths: ReadinessPaths) -> dict:
+    if not paths.adaptive_protocol.is_file():
+        return {
+            "status": "not_frozen", "verified": False, "collected": 0,
+            "required": ADAPTIVE_SCREEN_BLOCKS, "live_enabled": False,
+        }
+    protocol = read_adaptive_protocol(
+        paths.adaptive_protocol, paths.cost_candidate, paths.cost_summary
+    )
+    rows = []
+    for path in sorted(candidate for candidate in paths.forward_root.glob("pf_xbtusd_*")
+                       if candidate.is_dir()):
+        manifest = load_bundle(path)
+        start = datetime.fromisoformat(manifest["start"])
+        if start >= ADAPTIVE_FORWARD_START:
+            rows.append((start, datetime.fromisoformat(manifest["end"])))
+    if rows:
+        if rows[0][0] != ADAPTIVE_FORWARD_START:
+            raise ValueError("Adaptive forward evidence starts late")
+        for previous, current in zip(rows, rows[1:]):
+            if previous[1] != current[0]:
+                raise ValueError("Adaptive forward evidence has a gap")
+    collected = min(len(rows), ADAPTIVE_SCREEN_BLOCKS)
+    return {
+        "status": "collecting_forward_screen",
+        "verified": protocol["protocol_version"]
+        == "pf-xbtusd-adaptive-funding-forward-v2",
+        "forward_start": ADAPTIVE_FORWARD_START.isoformat(),
+        "collected": collected, "required": ADAPTIVE_SCREEN_BLOCKS,
+        "progress_percent": round(collected / ADAPTIVE_SCREEN_BLOCKS * 100, 2),
+        "risk_tiers": {"three_confirmations": "0.5%", "four_confirmations": "1.25%"},
+        "maximum_leverage": 10,
+        "paper_enabled": False, "live_enabled": False,
+    }
+
+
 def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
                     environ: dict[str, str] | None = None) -> dict:
     protocol, _ = read_protocol(paths.protocol, paths.cost_candidate, paths.cost_summary)
@@ -170,6 +215,7 @@ def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
     paper = _paper_status(paths.paper_root)
     configured_account = configuration_status(os.environ if environ is None else environ)
     account = _private_account(paths.account_summary, configured_account)
+    adaptive = _adaptive_candidate(paths)
 
     screen_data_complete = forward["screen"]["collected"] == SCREEN_BLOCKS
     holdout_data_complete = forward["holdout"]["collected"] == TOTAL_BLOCKS - SCREEN_BLOCKS
@@ -232,6 +278,7 @@ def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
             "paper_observer": paper,
             "private_account": account,
             "demo_environment": {"available": False, "status": "legacy_host_decommissioned"},
+            "adaptive_candidate": adaptive,
         },
         "blockers": blockers,
         "user_actions": ([
@@ -274,10 +321,14 @@ def main(argv=None) -> int:
                         default=DEFAULT_PATHS.instrument_snapshot)
     parser.add_argument("--paper-root", type=Path, default=DEFAULT_PATHS.paper_root)
     parser.add_argument("--account-summary", type=Path, default=DEFAULT_PATHS.account_summary)
+    parser.add_argument("--adaptive-protocol", type=Path, default=DEFAULT_PATHS.adaptive_protocol)
+    parser.add_argument("--adaptive-amendment", type=Path,
+                        default=DEFAULT_PATHS.adaptive_amendment)
     args = parser.parse_args(argv)
     paths = ReadinessPaths(args.forward_root, args.protocol, args.cost_candidate,
                            args.cost_summary, args.instrument_snapshot, args.paper_root,
-                           args.account_summary)
+                           args.account_summary, args.adaptive_protocol,
+                           args.adaptive_amendment)
     try:
         report = build_readiness(paths)
         write_report(args.output, report)
