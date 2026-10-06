@@ -272,7 +272,9 @@ ohne Orderfunktion begrenzt erfassen:
 ```
 
 Der Sammler speichert Rohseiten, normalisierte Trades und Prüfsummen. Jeder Lauf
-benötigt einen neuen Ausgabeordner.
+benötigt einen neuen Ausgabeordner. Mit `--before` und dem ältesten Zeitstempel
+des vorherigen Segments lässt sich die verfügbare Historie ohne Überschneidung
+rückwärts erweitern.
 
 ## Modi und Sicherheitsprinzipien
 

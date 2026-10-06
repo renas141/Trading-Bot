@@ -107,19 +107,36 @@ def parse_page(raw: bytes) -> list[dict]:
         raise MarketDataError("Malformed Kraken recent-trades response") from None
 
 
-def collect(output: Path, pages: int = 25,
+def _cursor(value: str) -> str:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        raise argparse.ArgumentTypeError("Trade cursor must be an ISO-8601 timestamp") from None
+    if parsed.tzinfo is None:
+        raise argparse.ArgumentTypeError("Trade cursor needs a timezone")
+    return value
+
+
+def collect(output: Path, pages: int = 25, before: str | None = None,
             transport: Callable[[str], bytes] = public_get,
             clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc)) -> dict:
     captured = clock()
     if output.exists() or not 1 <= pages <= MAX_PAGES or captured.tzinfo is None:
         raise ValueError("Use a new directory and 1..100 pages")
+    if before is not None:
+        try:
+            before_time = datetime.fromisoformat(before.replace("Z", "+00:00"))
+        except ValueError:
+            raise ValueError("Trade cursor must be an ISO-8601 timestamp") from None
+        if before_time.tzinfo is None or before_time > captured:
+            raise ValueError("Trade cursor needs a timezone and cannot be in the future")
     output.parent.mkdir(parents=True, exist_ok=True)
     try:
         with tempfile.TemporaryDirectory(dir=output.parent) as directory:
             temporary = Path(directory)
             all_rows: dict[str, dict] = {}
             page_records = []
-            cursor = None
+            cursor = before
             for page in range(pages):
                 query = {"symbol": "PF_XBTUSD"}
                 if cursor is not None:
@@ -176,6 +193,7 @@ def collect(output: Path, pages: int = 25,
             summary = {
                 "schema_version": 1, "provider": "Kraken Futures", "market": "PF_XBTUSD",
                 "captured_at": captured.astimezone(timezone.utc).isoformat(),
+                "requested_before": before,
                 "pages": len(page_records), "unique_trades": len(ordered),
                 "oldest_trade": ordered[0]["time"], "newest_trade": ordered[-1]["time"],
                 "minimum_price": str(min(row["price"] for row in ordered)),
@@ -188,6 +206,7 @@ def collect(output: Path, pages: int = 25,
                 "raw_integrity_checked": True, "live_enabled": False,
                 "limitations": [
                     "The endpoint exposes at most the recent seven days or the latest engine restart.",
+                    "Time-based page cursors cannot prove that every trade at a page boundary is available.",
                     "Public trades measure executed flow; they do not prove an obtainable fill.",
                     "No credentials or order endpoint are used.",
                 ],
@@ -197,7 +216,8 @@ def collect(output: Path, pages: int = 25,
             )
             manifest = {
                 "schema_version": 1, "provider": "Kraken Futures", "market": "PF_XBTUSD",
-                "documentation": DOCUMENTATION, "pages": page_records,
+                "documentation": DOCUMENTATION, "requested_before": before,
+                "pages": page_records,
                 "normalized_sha256": hashlib.sha256((temporary / "trades.csv").read_bytes()).hexdigest(),
             }
             (temporary / "manifest.json").write_text(
@@ -215,9 +235,10 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Collect recent public PF_XBTUSD trades")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--pages", type=int, default=25)
+    parser.add_argument("--before", type=_cursor)
     args = parser.parse_args(argv)
     try:
-        print(json.dumps(collect(args.output, args.pages), indent=2))
+        print(json.dumps(collect(args.output, args.pages, args.before), indent=2))
         return 0
     except (OSError, ValueError, MarketDataError) as exc:
         print(f"Recent-trades collection failed: {type(exc).__name__}: {exc}", file=sys.stderr)

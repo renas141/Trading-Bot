@@ -71,9 +71,9 @@ Vierstundenblöcke. In der 2022-Crashdiagnose war die kurze 1-/4-Wochen-Regel in
 beiden Kostenfällen positiv, die langsame 30-/120-Tage-Regel negativ. Wegen des
 schwachen kurzen Modells im Jahr 2025 wird daraus keine rückwirkende Auswahl.
 Der aktive adaptive v2-Forward-Test steht bei 4 von 180 Blöcken. Der öffentliche
-Livemarktzugang wurde zusätzlich mit 10.000 eindeutigen Einzeltrades und acht
-separat erhaltenen Teilliquidationen geprüft. Ein begrenzter Echtzeit-PAPER-Lauf
-verarbeitete drei neue Beobachtungen fehlerfrei, blieb aber mangels bestandenen
+Livemarktzugang wurde zusätzlich mit 50.000 eindeutigen Einzeltrades und 79
+separat erhaltenen Liquidationsereignissen geprüft. Ein begrenzter Echtzeit-PAPER-Lauf
+verarbeitete zehn neue Beobachtungen fehlerfrei, blieb aber mangels bestandenen
 Screens ohne Position.
 
 Zusätzlich zeigt der Bericht den getrennten

@@ -77,12 +77,23 @@ bleiben bis zum bestandenen Zukunftstest ausgeschaltet.
 
 ## Öffentlicher Livemarktzugang
 
-Der neue Einzeltrade-Sammler hat 10.000 eindeutige PF_XBTUSD-Ausführungen aus
-rund 70 Minuten geladen. Der Bestand umfasst 138,1533 BTC beziehungsweise rund
-11,91 Mio. USD Gegenwert, 4.857 Käufer- und 5.143 Verkäufer-Trades sowie acht
-separat gekennzeichnete Teilliquidationen. Sämtliche 100 Rohseiten und die
-normalisierte CSV sind per SHA-256 gebunden. Einzelheiten stehen im
+Der neue Einzeltrade-Sammler hat 50.000 eindeutige PF_XBTUSD-Ausführungen aus
+knapp sechs Stunden geladen. Der Bestand umfasst 854,1928 BTC beziehungsweise
+rund 73,49 Mio. USD Gegenwert, 24.154 Käufer- und 25.846 Verkäufer-Trades sowie
+79 separat gekennzeichnete Liquidationsereignisse. Sämtliche 500 Rohseiten und
+die fünf normalisierten CSV-Dateien sind per SHA-256 gebunden. Einzelheiten stehen im
 [Livemarktbericht](kraken-live-trades-2026-10-06.md).
+
+Eine 15-Minuten-Diagnose fand zwar eine gleichzeitige Korrelation von 0,425
+zwischen Volumenungleichgewicht und Rendite, aber nur 0,060 zur Rendite des
+nächsten Fensters. Die nächste Richtung wurde in 47,83 Prozent der Fälle
+getroffen. Daraus wird kein neuer Entscheidungsfilter abgeleitet.
+
+Im gemeinsamen Zeitraum 08:00–12:00 UTC enthielten die Einzeltrades 92,22 Prozent
+des von der getrennten Kraken-Analytics gemeldeten BTC-Volumens. Die Richtung des
+Kaufüberhangs stimmte überein, die zeitbasierte Pagination garantiert jedoch
+keine vollständige Tickabdeckung an Seitengrenzen. Der Bestand wird deshalb als
+Mikrostrukturstichprobe und nicht als lückenloses Marktband verwendet.
 
 Der Abruf bestätigt einen belastbaren öffentlichen Marktlesezugang. Er bestätigt
 weder die persönliche Kontoberechtigung noch eine erzielbare reale Ausführung.

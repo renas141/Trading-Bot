@@ -64,6 +64,22 @@ class KrakenFuturesTradesTests(unittest.TestCase):
             self.assertTrue(summary["raw_integrity_checked"])
             self.assertEqual(len(calls), 2)
 
+    def test_collect_can_start_before_an_exact_prior_cursor(self):
+        calls = []
+
+        def transport(url):
+            calls.append(parse_qs(urlsplit(url).query))
+            return payload(7)
+
+        with tempfile.TemporaryDirectory() as directory:
+            cursor = "2026-10-06T13:00:10.000000000Z"
+            summary = collect(
+                Path(directory) / "older", pages=1, before=cursor, transport=transport,
+                clock=lambda: datetime(2026, 10, 6, 14, tzinfo=timezone.utc),
+            )
+            self.assertEqual(calls[0]["lastTime"], [cursor])
+            self.assertEqual(summary["requested_before"], cursor)
+
 
 if __name__ == "__main__":
     unittest.main()
