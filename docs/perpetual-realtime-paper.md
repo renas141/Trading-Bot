@@ -33,10 +33,14 @@ im Minutenabstand erfassen. Der Prozess bleibt währenddessen im Vordergrund:
 
 ## Sicherheitsmodell
 
-- Bid und Ask stammen aus der öffentlichen Kraken-Analytics-Reihe. Der bereits
-  beobachtete Spread wird deshalb nicht ein zweites Mal berechnet.
-- Zusätzlich wird die eingefrorene p95-Slippage verwendet. Die öffentliche
-  geschätzte Ausführungstiefe muss für die Positionsgröße vorhanden sein.
+- Aktuelles Bid und Ask, verfügbare Größe, Markpreis, Indexpreis und Börsenzeit
+  stammen aus Krakens öffentlichem Futures-Ticker. Der bereits beobachtete
+  Spread wird deshalb nicht ein zweites Mal berechnet.
+- Die öffentliche Analytics-Reihe liefert die geschätzte Ausführungstiefe für
+  1.000, 10.000, 100.000 und 1.000.000 USD. Ihre nachteiligen Slippage-Verhältnisse
+  werden an das aktuelle Bid und Ask angelegt; die benötigte Stufe muss für die
+  Positionsgröße vorhanden sein. Die kalibrierte p95-Slippage bleibt dabei die
+  Mindestannahme, falls die aktuelle Tiefenschätzung günstiger ausfällt.
 - Quote, lokale Abrufdauer und Signal besitzen feste Altersgrenzen. Alte oder
   zukünftige Daten verändern das virtuelle Konto nicht.
 - Jeder Quote-Beleg enthält die öffentlichen Rohantworten und SHA-256-Prüfsummen.
@@ -44,16 +48,21 @@ im Minutenabstand erfassen. Der Prozess bleibt währenddessen im Vordergrund:
   nicht erneut verarbeitet.
 - Tagesverlust, Gesamtdrawdown, Stop, Margin, Funding und maximal 10x Hebel werden
   gespeichert. Die Risikoprüfung wählt den kleinsten nötigen Hebel.
+- Liquidationsschwelle, offener Gewinn/Verlust und Funding verwenden den
+  aktuellen Kraken-Markpreis. Schutzstopps verwenden für LONG das aktuelle Bid
+  und für SHORT das aktuelle Ask. Bereits gezahltes oder erhaltenes Funding und
+  die Liquidationsgebühr verschieben die laufend neu berechnete Schwelle.
 - Ein exklusives Dateischloss verhindert zwei gleichzeitige Schreiber.
 - LIVE bleibt fest deaktiviert. Das Modul besitzt weder Zugangsdaten noch einen
   privaten Order-Endpunkt.
 
-Der öffentliche Analytics-Beleg enthält keinen Tick-Markpreis. Der
-Liquidationscheck verwendet deshalb den Mittelpunkt aus Bid und Ask. Das ist eine
-offen ausgewiesene PAPER-Modellgrenze und keine Behauptung über eine tatsächliche
-Kraken-Liquidation. Kraken dokumentiert die verwendeten öffentlichen Reihen unter
+Jedes Ereignis speichert die vollständigen öffentlichen Ticker- und
+Analytics-Rohantworten mit Prüfsummen. Der Ticker ist eine begrenzte REST-
+Momentaufnahme und kein lückenloser WebSocket-Feed. Reale Liquidation und Fills
+können zwischen zwei Abrufen eintreten; der Lauf bleibt deshalb eine
+PAPER-Simulation. Kraken dokumentiert die verwendeten Tiefenreihen unter
 [Market Analytics](https://docs.kraken.com/api/docs/futures-api/charts/market-analytics);
-für spätere präzisere Mark-Kerzen steht der öffentliche
+für historische Mark-Kerzen steht der öffentliche
 [Market-Candles-Endpunkt](https://docs.kraken.com/api/docs/futures-api/charts/candles)
 zur Verfügung.
 

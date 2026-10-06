@@ -64,7 +64,8 @@ async function loadPaper() {
     text("paper-position", position ? (position.direction === "LONG" ? "Long" : "Short") : "Keine");
     text("paper-leverage", position ? `${position.leverage}x · Stop ${usd.format(Number(position.stop_price))}` : "Maximal 10x · kleinster nötiger Hebel");
     text("paper-events", number.format(paper.quote_events || paper.processed_blocks || 0));
-    text("paper-last-quote", paper.last_quote_event_at ? `Letzte Marktdaten ${dateTime.format(new Date(paper.last_quote_event_at))} UTC` : "Noch keine Marktdaten");
+    const mark = paper.last_mark_price == null ? "" : ` · Markpreis ${usd.format(Number(paper.last_mark_price))}`;
+    text("paper-last-quote", paper.last_quote_event_at ? `Letzte Marktdaten ${dateTime.format(new Date(paper.last_quote_event_at))} UTC${mark}` : "Noch keine Marktdaten");
     const stopped = paper.manual_kill_switch || paper.daily_halted || paper.drawdown_halted;
     text("paper-safety", stopped ? "Einstiege gesperrt" : "Schutz aktiv");
     text("paper-strategy", `${strategies[paper.strategy_status] || paper.strategy_status || "Shadow-Simulation"} · LIVE aus`);

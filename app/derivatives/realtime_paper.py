@@ -29,14 +29,13 @@ from app.derivatives.forward_paper import (
 from app.derivatives.execution_quality import ExecutionQualityGate, ExecutionQuote
 from app.derivatives.observed_costs import load_observed_cost_scenario
 from app.derivatives.risk import LeveragedRiskManager
+from app.derivatives.safety import dynamic_liquidation_price
 from app.derivatives.settings import DerivativeSettings
 from app.domain import Direction
 from app.errors import MarketDataError
 from app.market_data.datasets import sha256
-from app.market_data.kraken_perpetual_analytics import (
-    AnalyticsSnapshot,
-    KrakenPerpetualAnalyticsAdapter,
-)
+from app.market_data.kraken_futures_ticker import KrakenRealtimeMarketAdapter
+from app.market_data.kraken_perpetual_analytics import AnalyticsSnapshot
 from app.market_data.quote_monitor import exclusive_file, publish_summary
 from app.strategies.funding_aware_regime_momentum import (
     FundingAwareRegimeMomentumParameters,
@@ -106,6 +105,8 @@ def _new_realtime_state(settings: DerivativeSettings, activated_at: datetime) ->
         "last_quote_received_at": None,
         "last_signal_candle": None,
         "last_funding_candle": None,
+        "last_mark_price": None,
+        "last_mark_event_at": None,
         "position_bars_held": 0,
         "last_actions": [],
     })
@@ -126,14 +127,34 @@ def _validate_snapshot(snapshot: AnalyticsSnapshot, now: datetime, *, max_quote_
             or snapshot.requested_at.tzinfo is None or snapshot.received_at.tzinfo is None
             or snapshot.event_at.tzinfo is None):
         raise MarketDataError("Invalid PF_XBTUSD public quote snapshot")
+    if (snapshot.mark_price is None or snapshot.mark_price <= 0
+            or snapshot.index_price is None or snapshot.index_price <= 0
+            or snapshot.mark_event_at is None or snapshot.mark_event_at.tzinfo is None
+            or snapshot.last_trade_at is None or snapshot.last_trade_at.tzinfo is None
+            or snapshot.analytics_event_at is None or snapshot.analytics_event_at.tzinfo is None
+            or snapshot.bid_size is None or snapshot.bid_size < 0
+            or snapshot.ask_size is None or snapshot.ask_size < 0):
+        raise MarketDataError("PF_XBTUSD ticker mark evidence is missing or invalid")
     event_age = (now - snapshot.event_at).total_seconds()
     request_time = (snapshot.received_at - snapshot.requested_at).total_seconds()
     receipt_age = (now - snapshot.received_at).total_seconds()
+    mark_age = (now - snapshot.mark_event_at).total_seconds()
+    analytics_age = (now - snapshot.analytics_event_at).total_seconds()
     if (not 0 <= event_age <= max_quote_age or not 0 <= request_time <= max_request_seconds
-            or not 0 <= receipt_age <= max_quote_age):
+            or not 0 <= receipt_age <= max_quote_age or not 0 <= mark_age <= max_quote_age
+            or not 0 <= analytics_age <= max_quote_age
+            or snapshot.last_trade_at > snapshot.mark_event_at):
         raise MarketDataError("Public quote is stale, slow, or from the future")
-    if set(snapshot.raw) != {"spreads", "slippage", "funding"}:
+    inventory = {"spreads", "slippage", "funding", "ticker"}
+    if (set(snapshot.raw) != inventory or set(snapshot.urls) != inventory
+            or not all(isinstance(raw, bytes) and raw for raw in snapshot.raw.values())):
         raise MarketDataError("Public quote evidence inventory differs")
+
+
+def _mark(snapshot: AnalyticsSnapshot) -> Decimal:
+    if snapshot.mark_price is None:
+        raise MarketDataError("PF_XBTUSD ticker mark evidence is missing")
+    return snapshot.mark_price
 
 
 def _tier(notional: Decimal) -> str | None:
@@ -148,7 +169,7 @@ def _entry_decision(manager: LeveragedRiskManager, signal: Signal, broker, risk,
                     settings: DerivativeSettings, snapshot: AnalyticsSnapshot,
                     planned_reference: Decimal):
     reference = snapshot.ask if signal.direction == Direction.LONG else snapshot.bid
-    account = broker.snapshot((snapshot.bid + snapshot.ask) / 2)
+    account = broker.snapshot(_mark(snapshot))
     context = risk.observe(settings, reference, snapshot.received_at, account.equity)
     decision = manager.evaluate(signal, account, context)
     if not decision.allowed:
@@ -166,7 +187,7 @@ def _entry_decision(manager: LeveragedRiskManager, signal: Signal, broker, risk,
             reference = max(snapshot.ask, execution / (1 + fraction))
         else:
             reference = min(snapshot.bid, execution / (1 - fraction))
-        account = broker.snapshot((snapshot.bid + snapshot.ask) / 2)
+        account = broker.snapshot(_mark(snapshot))
         context = risk.observe(settings, reference, snapshot.received_at, account.equity)
         decision = manager.evaluate(signal, account, context)
         if not decision.allowed:
@@ -246,18 +267,19 @@ def process_snapshot(state: dict, settings: DerivativeSettings, snapshot: Analyt
                      max_signal_age_seconds: int = DEFAULT_MAX_SIGNAL_AGE_SECONDS) -> list[str]:
     broker, risk = _restore_broker(settings, state), _risk(state)
     manager, actions = LeveragedRiskManager(settings), []
-    midpoint = (snapshot.bid + snapshot.ask) / 2
-    account = broker.mark(midpoint)
-    risk.observe(settings, midpoint, snapshot.received_at, account.equity)
+    mark = _mark(snapshot)
+    account = broker.mark(mark)
+    risk.observe(settings, mark, snapshot.received_at, account.equity)
     position = account.position
     if (position is not None and observation is not None
             and observation.candle_end is not None and observation.funding_rate):
-        payment = broker.apply_funding(observation.funding_rate, midpoint)
+        payment = broker.apply_funding(observation.funding_rate, mark)
         actions.append(f"FUNDING_{payment}")
-        position = broker.snapshot(midpoint).position
+        position = broker.snapshot(mark).position
     if position is not None:
-        liquidated = ((position.direction == Direction.LONG and midpoint <= position.liquidation_price)
-                      or (position.direction == Direction.SHORT and midpoint >= position.liquidation_price))
+        liquidation = dynamic_liquidation_price(position, broker._funding_paid)
+        liquidated = ((position.direction == Direction.LONG and mark <= liquidation)
+                      or (position.direction == Direction.SHORT and mark >= liquidation))
         stopped = ((position.direction == Direction.LONG and snapshot.bid <= position.stop_price)
                    or (position.direction == Direction.SHORT and snapshot.ask >= position.stop_price))
         if liquidated or stopped:
@@ -268,7 +290,7 @@ def process_snapshot(state: dict, settings: DerivativeSettings, snapshot: Analyt
             actions.append(f"{reason}_{tier}")
 
     if observation is not None and observation.candle_end is not None:
-        position = broker.snapshot(midpoint).position
+        position = broker.snapshot(mark).position
         state["last_signal_candle"] = observation.candle_end.isoformat()
         state["last_funding_candle"] = observation.candle_end.isoformat()
         if position is not None:
@@ -293,7 +315,7 @@ def process_snapshot(state: dict, settings: DerivativeSettings, snapshot: Analyt
                 actions.append("ENTRY_REJECTED: Manual kill switch is active.")
             elif (snapshot.received_at - signal.timestamp).total_seconds() > max_signal_age_seconds:
                 actions.append("ENTRY_REJECTED: Closed-candle signal is stale.")
-            elif broker.snapshot(midpoint).position is not None:
+            elif broker.snapshot(mark).position is not None:
                 actions.append("ENTRY_REJECTED: A derivative position is already open.")
             elif observation.reference_price is None:
                 actions.append("ENTRY_REJECTED: Completed-candle reference price is unavailable.")
@@ -309,12 +331,14 @@ def process_snapshot(state: dict, settings: DerivativeSettings, snapshot: Analyt
                 else:
                     actions.append("ENTRY_REJECTED: " + decision.reasons[0])
 
-    account = broker.mark(midpoint)
-    risk.observe(settings, midpoint, snapshot.received_at, account.equity)
+    account = broker.mark(mark)
+    risk.observe(settings, mark, snapshot.received_at, account.equity)
     state["equity_curve"].append(str(account.equity))
     state["quote_events"] += 1
     state["last_quote_event_at"] = snapshot.event_at.isoformat()
     state["last_quote_received_at"] = snapshot.received_at.isoformat()
+    state["last_mark_price"] = str(mark)
+    state["last_mark_event_at"] = snapshot.mark_event_at.isoformat()
     state["last_actions"] = actions
     _save_runtime(state, broker, risk)
     return actions
@@ -331,7 +355,13 @@ def _load_events(output: Path, initial: dict,
                 or event.get("previous_event_sha256") != prior
                 or event.get("event_id") in ids):
             raise ValueError("Realtime PAPER event chain is incomplete, reordered or duplicated")
-        for kind in ("spreads", "slippage", "funding"):
+        raw_inventory = event.get("quote_raw", {})
+        hash_inventory = event.get("quote_sha256", {})
+        if (set(raw_inventory) != set(hash_inventory)
+                or set(raw_inventory) not in ({"spreads", "slippage", "funding"},
+                                              {"spreads", "slippage", "funding", "ticker"})):
+            raise ValueError("Realtime PAPER quote evidence inventory differs")
+        for kind in raw_inventory:
             raw = event.get("quote_raw", {}).get(kind)
             expected = event.get("quote_sha256", {}).get(kind)
             if not isinstance(raw, str) or sha256(raw.encode()) != expected:
@@ -366,6 +396,12 @@ def _append_event(output: Path, state: dict, snapshot: AnalyticsSnapshot,
         "quote_event_at": snapshot.event_at.isoformat(),
         "quote_received_at": snapshot.received_at.isoformat(),
         "bid": str(snapshot.bid), "ask": str(snapshot.ask),
+        "bid_size": str(snapshot.bid_size), "ask_size": str(snapshot.ask_size),
+        "mark_price": str(_mark(snapshot)), "index_price": str(snapshot.index_price),
+        "mark_event_at": snapshot.mark_event_at.isoformat(),
+        "last_trade_at": snapshot.last_trade_at.isoformat(),
+        "analytics_event_at": (snapshot.analytics_event_at.isoformat()
+                               if snapshot.analytics_event_at else None),
         "spread_bps": str(snapshot.spread_bps),
         "funding_relative_rate": str(snapshot.funding_relative_rate),
         "execution_prices": _json_value(snapshot.execution_prices),
@@ -375,9 +411,9 @@ def _append_event(output: Path, state: dict, snapshot: AnalyticsSnapshot,
         "candidate_observation": _json_value(asdict(observation)) if observation else None,
         "actions": actions, "state_after": state,
         "limitations": [
-            "Analytics quotes are minute buckets and do not guarantee fills.",
-            "Liquidation uses public bid/ask midpoint because a tick mark price is unavailable here.",
-            "Observed depth plus calibrated adverse slippage is a conservative PAPER model.",
+            "Execution-depth analytics are minute buckets and do not guarantee fills.",
+            "Liquidation and account equity use Kraken's public PF_XBTUSD mark price.",
+            "Observed depth with a calibrated adverse-slippage floor is a PAPER model.",
         ],
     }
     directory = output / "events"
@@ -396,28 +432,35 @@ def _status(settings: DerivativeSettings, state: dict, strategy_status: str,
             manual_halt: bool, status: str, *, last_error: str | None = None) -> dict:
     broker = _restore_broker(settings, state)
     snapshot = broker.snapshot()
+    open_position = _position(snapshot.position)
+    if open_position is not None:
+        open_position["dynamic_liquidation_price"] = str(dynamic_liquidation_price(
+            snapshot.position, broker._funding_paid,
+        ))
     performance = calculate_derivative_performance(
         settings.initial_capital, broker._balance, broker.trades,
         [Decimal(value) for value in state["equity_curve"]],
     )
     return {
         "schema_version": 1, "status": status, "mode": "PAPER",
-        "provider": "Kraken Futures public analytics", "market": "PF_XBTUSD",
+        "provider": "Kraken Futures public ticker and analytics", "market": "PF_XBTUSD",
         "strategy_status": strategy_status, "live_enabled": False,
         "manual_kill_switch": manual_halt, "quote_events": state["quote_events"],
         "last_quote_event_at": state["last_quote_event_at"],
         "last_quote_received_at": state["last_quote_received_at"],
+        "last_mark_price": state["last_mark_price"],
+        "last_mark_event_at": state["last_mark_event_at"],
         "last_signal_candle": state["last_signal_candle"],
         "balance": str(snapshot.balance), "equity": str(snapshot.equity),
-        "open_position": _position(snapshot.position), "closed_trades": len(broker.trades),
+        "open_position": open_position, "closed_trades": len(broker.trades),
         "performance": performance.as_dict(), "last_actions": state["last_actions"],
         "daily_halted": state["risk"]["daily_halted"],
         "drawdown_halted": state["risk"]["drawdown_halted"],
         "maximum_leverage_allowed": 10, "last_error": last_error,
         "last_event_sha256": state["last_event_sha256"],
         "model_limit": (
-            "Liquidationen werden mit dem öffentlichen Bid-/Ask-Mittelpunkt geprüft; "
-            "ein Tick-Markpreis ist in diesem Abruf nicht enthalten."
+            "Liquidationen und Kontowert werden mit Krakens öffentlichem Markpreis geprüft; "
+            "Ausführungen bleiben eine PAPER-Simulation mit beobachteter Markttiefe."
         ),
     }
 
@@ -446,7 +489,7 @@ def observe(output: Path, cost_candidate: Path, cost_summary: Path, *, count: in
                        else "no_trade_waiting_for_validation")
     config = {
         "version": VERSION, "mode": "PAPER", "live_enabled": False,
-        "provider": "Kraken Futures public analytics", "market": "PF_XBTUSD",
+        "provider": "Kraken Futures public ticker and analytics", "market": "PF_XBTUSD",
         "strategy_status": strategy_status, "settings": _settings(settings),
         "cost_proof": cost_proof, "activation_proof": activation_proof,
         "runner_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
@@ -458,7 +501,7 @@ def observe(output: Path, cost_candidate: Path, cost_summary: Path, *, count: in
                       "signal_seconds": DEFAULT_MAX_SIGNAL_AGE_SECONDS},
     }
     output.mkdir(parents=True, exist_ok=True)
-    adapter = adapter or KrakenPerpetualAnalyticsAdapter()
+    adapter = adapter or KrakenRealtimeMarketAdapter()
     with exclusive_file(output / "runner.lock"):
         session_path = output / "session.json"
         if session_path.is_file():

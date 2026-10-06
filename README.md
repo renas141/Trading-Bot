@@ -322,9 +322,10 @@ Forward-Paperlauf vorhanden. Der normale Spot-PaperBroker bleibt davon getrennt.
 
 - Eine private Orderanbindung und echte Orders. Der vorhandene private
   Kontozugriff ist strikt lesend; API-Secrets werden nicht gespeichert.
-- Ein unbeaufsichtigter WebSocket-Dauerfeed mit Tick-Markpreis. Der vorhandene
-  Echtzeit-Paperbeobachter verwendet bewusst begrenzte öffentliche Analytics-Abrufe;
-  der Forward-Paperlauf bleibt eine getrennte Shadow-Simulation.
+- Ein unbeaufsichtigter WebSocket-Dauerfeed. Der vorhandene Echtzeit-Paperbeobachter
+  verbindet begrenzte öffentliche Ticker-Abrufe einschließlich Markpreis mit
+  öffentlichen Tiefen-Analytics; der Forward-Paperlauf bleibt eine getrennte
+  Shadow-Simulation.
 - Validierte profitable Strategien, kalibrierte Scores, Multi-Timeframe-Auswertung
   und konkrete Regime-Erkennung.
 - Swing-basierte Stop-Ermittlung, Trailing, Break-even und Teilverkäufe.

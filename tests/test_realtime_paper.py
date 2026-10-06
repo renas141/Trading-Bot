@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -13,6 +14,8 @@ from app.derivatives.realtime_paper import (
     process_snapshot,
     set_halt,
 )
+from app.derivatives.forward_paper import _restore_broker
+from app.derivatives.safety import dynamic_liquidation_price
 from app.derivatives.settings import DerivativeSettings
 from app.domain import Direction
 from app.errors import MarketDataError
@@ -24,17 +27,20 @@ D = Decimal
 NOW = datetime(2027, 1, 2, 12, 2, tzinfo=timezone.utc)
 
 
-def snapshot(*, at=NOW, bid="99.99", ask="100.01"):
+def snapshot(*, at=NOW, bid="99.99", ask="100.01", mark=None):
     executions = {}
     for size in ("1k", "10k", "100k", "1m"):
         executions[f"sell_{size}"] = D(bid)
         executions[f"buy_{size}"] = D(ask)
     raw = {name: (f'{{"kind":"{name}","at":"{at.isoformat()}"}}').encode()
-           for name in ("spreads", "slippage", "funding")}
+           for name in ("spreads", "slippage", "funding", "ticker")}
+    mark = D(mark) if mark is not None else (D(bid) + D(ask)) / 2
     return AnalyticsSnapshot(
         "PF_XBTUSD", at - timedelta(minutes=1), at - timedelta(seconds=2), at,
         D(bid), D(ask), D("0.00001"), executions, raw,
         {name: f"https://futures.kraken.com/{name}" for name in raw},
+        mark, at - timedelta(seconds=1), mark, at - timedelta(seconds=3),
+        D("1"), D("1"), at - timedelta(minutes=1),
     )
 
 
@@ -64,6 +70,11 @@ class RealtimePaperTests(unittest.TestCase):
         with self.assertRaisesRegex(MarketDataError, "stale"):
             _validate_snapshot(stale, NOW, max_quote_age=180, max_request_seconds=30)
 
+    def test_fresh_ticker_cannot_mask_stale_depth_analytics(self):
+        value = replace(snapshot(), analytics_event_at=NOW - timedelta(minutes=10))
+        with self.assertRaisesRegex(MarketDataError, "stale"):
+            _validate_snapshot(value, NOW, max_quote_age=180, max_request_seconds=30)
+
     def test_observed_quote_entry_uses_safe_leverage_and_protective_exit(self):
         state = _new_realtime_state(self.settings, NOW - timedelta(hours=1))
         state["activated_at"] = (NOW - timedelta(hours=1)).isoformat()
@@ -84,6 +95,45 @@ class RealtimePaperTests(unittest.TestCase):
         self.assertTrue(any("PAPER_REALTIME_STOP" in action for action in stopped))
         self.assertIsNone(state["position"])
         self.assertEqual(len(state["trades"]), 1)
+
+    def test_liquidation_uses_exchange_mark_and_dynamic_margin_threshold(self):
+        leveraged = DerivativeSettings(
+            fee_rate=D("0"), spread_bps=D("0"), slippage_bps=D("0"),
+            max_risk_per_trade=D("0.5"), max_total_risk=D("0.5"),
+            max_daily_loss=D("0.5"), max_drawdown=D("0.5"),
+            max_margin_fraction=D("0.01"), min_liquidation_buffer=D("0.0001"),
+        )
+        state = _new_realtime_state(leveraged, NOW - timedelta(hours=1))
+        state["activated_at"] = (NOW - timedelta(hours=1)).isoformat()
+        process_snapshot(
+            state, leveraged, snapshot(),
+            CandidateObservation(
+                replace(long_signal(), stop_price=D("96")),
+                NOW - timedelta(minutes=1), reference_price=D("100")
+            ),
+            manual_halt=False,
+        )
+        liquidation = D(str(state["position"]["liquidation_price"]))
+        broker = _restore_broker(leveraged, state)
+        before_funding = dynamic_liquidation_price(broker._position, broker._funding_paid)
+        self.assertGreater(before_funding, liquidation)
+        process_snapshot(
+            state, leveraged, snapshot(at=NOW + timedelta(minutes=1)),
+            CandidateObservation(None, NOW + timedelta(minutes=1), D("0.01")),
+            manual_halt=False,
+        )
+        broker = _restore_broker(leveraged, state)
+        after_funding = dynamic_liquidation_price(broker._position, broker._funding_paid)
+        self.assertGreater(after_funding, before_funding)
+        crossed_mark = (after_funding + before_funding) / 2
+        actions = process_snapshot(
+            state, leveraged,
+            snapshot(at=NOW + timedelta(minutes=2), bid="99.99", ask="100.01",
+                     mark=str(crossed_mark)),
+            None, manual_halt=False,
+        )
+        self.assertTrue(any("PAPER_REALTIME_LIQUIDATION" in action for action in actions))
+        self.assertIsNone(state["position"])
 
     def test_manual_halt_blocks_entry_but_keeps_quote_accounting(self):
         state = _new_realtime_state(self.settings, NOW - timedelta(hours=1))

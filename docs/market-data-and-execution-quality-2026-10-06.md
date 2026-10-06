@@ -99,3 +99,22 @@ Der Abruf bestätigt einen belastbaren öffentlichen Marktlesezugang. Er bestät
 weder die persönliche Kontoberechtigung noch eine erzielbare reale Ausführung.
 Der persönliche Nur-Lese-Nachweis benötigt weiterhin einen lokal gesetzten,
 eng begrenzten Kraken-Schlüssel.
+
+## Markpreis im Echtzeit-PAPER
+
+Der begrenzte Echtzeit-PAPER-Beobachter verbindet die Analytics jetzt mit
+Krakens öffentlichem Futures-Ticker. Jede Momentaufnahme enthält aktuelles Bid
+und Ask samt Größe, Markpreis, Indexpreis, Funding und Börsenzeit. Liquidation,
+Kontowert und Funding verwenden den Markpreis; Schutzstopps verwenden das für die
+Schließung relevante Bid beziehungsweise Ask. Die nachteiligen Tiefenverhältnisse
+der Analytics werden auf das aktuelle Orderbuch übertragen. Die
+Liquidationsschwelle wird nach Funding-Zahlungen und einschließlich der
+Liquidationsgebühr neu berechnet.
+
+Ein gezielter 10x-Test hält Bid und Ask oberhalb des LONG-Stopps und setzt nur
+den Markpreis unter die dynamische, aber noch über die ursprüngliche
+Liquidationsschwelle. Der Bot erkennt diesen Fall als Liquidation. Ein
+anschließender echter öffentlicher Kraken-Abruf wurde ohne
+Fehler und ohne Orderfunktion verarbeitet. Das beseitigt die frühere
+Mittelpunkt-Näherung, macht aus der begrenzten REST-Beobachtung aber keinen
+lückenlosen Tickfeed und keinen Profitabilitätsnachweis.

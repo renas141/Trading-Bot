@@ -71,6 +71,13 @@ class AnalyticsSnapshot:
     execution_prices: dict[str, Decimal | None]
     raw: dict[str, bytes]
     urls: dict[str, str]
+    mark_price: Decimal | None = None
+    mark_event_at: datetime | None = None
+    index_price: Decimal | None = None
+    last_trade_at: datetime | None = None
+    bid_size: Decimal | None = None
+    ask_size: Decimal | None = None
+    analytics_event_at: datetime | None = None
 
     @property
     def spread_bps(self) -> Decimal:
