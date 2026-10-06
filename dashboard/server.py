@@ -16,15 +16,16 @@ STATIC = {"/": ("index.html", "text/html"), "/app.js": ("app.js", "text/javascri
 
 def paper_status(paper_root: Path) -> dict:
     root = paper_root.resolve()
-    choices = (
-        ("pf_xbtusd_realtime_candidate", "Echtzeit-Kandidat"),
-        ("pf_xbtusd_realtime_observer", "Echtzeit-Beobachter"),
-        ("pf_xbtusd_funding_aware_v2", "Forward-Shadow-PAPER"),
-    )
-    for name, label in choices:
-        path = (root / name / "status.json").resolve()
+    choices = sorted(root.glob("pf_xbtusd_*/status.json"),
+                     key=lambda path: path.stat().st_mtime, reverse=True)
+    for candidate in choices:
+        path = candidate.resolve()
         if not path.is_relative_to(root) or not path.is_file():
             continue
+        name = path.parent.name
+        label = ("Echtzeit-Kandidat" if "candidate" in name else
+                 "Forward-Shadow-PAPER" if "funding_aware" in name else
+                 "Echtzeit-Beobachter")
         value = json.loads(path.read_text(encoding="utf-8"))
         if (not isinstance(value, dict) or value.get("mode") != "PAPER"
                 or value.get("live_enabled") is not False

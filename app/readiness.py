@@ -45,7 +45,7 @@ DEFAULT_PATHS = ReadinessPaths(
     Path("data/research/perpetual_funding_aware_forward_20261003_v2/protocol.json"),
     Path("data/evidence/perpetual-costs-20260923-evening/cost-candidate.json"),
     Path("data/evidence/perpetual-costs-20260923-evening/summary.json"),
-    Path("data/evidence/kraken_derivatives_20261004"),
+    Path("data/evidence/kraken_derivatives_20261006_live"),
     Path("data/paper"),
     Path("data/evidence/kraken-readonly/account-summary.json"),
     Path("data/research/perpetual_adaptive_forward_20261005_v2/protocol.json"),
@@ -112,11 +112,9 @@ def _stage(protocol: Path, name: str) -> dict:
 
 
 def _paper_status(root: Path) -> dict:
-    for name in ("pf_xbtusd_realtime_candidate", "pf_xbtusd_realtime_observer",
-                 "pf_xbtusd_funding_aware_v2"):
-        path = root / name / "status.json"
-        if not path.is_file():
-            continue
+    candidates = sorted(root.glob("pf_xbtusd_*/status.json"),
+                        key=lambda path: path.stat().st_mtime, reverse=True)
+    for path in candidates:
         value = json.loads(path.read_text(encoding="utf-8"))
         if (not isinstance(value, dict) or value.get("mode") != "PAPER"
                 or value.get("market") != "PF_XBTUSD"
@@ -127,7 +125,7 @@ def _paper_status(root: Path) -> dict:
         return {
             "status": value.get("status"), "healthy": healthy,
             "observations": observed, "closed_trades": int(value.get("closed_trades", 0)),
-            "live_enabled": False,
+            "source": path.parent.name, "live_enabled": False,
         }
     return {"status": "not_started", "healthy": False, "observations": 0,
             "closed_trades": 0, "live_enabled": False}

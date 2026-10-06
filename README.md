@@ -237,6 +237,9 @@ Der [Funding-Forward-Bericht](docs/perpetual-funding-forward-data-2026-09-24.md)
 beschreibt den ersten lückenlosen Stundentag und die Grenze der älteren Historie.
 Die [laufende Forward-Sammlung](docs/perpetual-forward-collection-2026-09-24.md)
 führt diese Daten nun gemeinsam mit Preisen, Regime und Ausführungskosten fort.
+Der [geprüfte öffentliche Livemarktzugang](docs/kraken-live-trades-2026-10-06.md)
+archiviert zusätzlich bis zu 10.000 aktuelle PF_XBTUSD-Einzeltrades je Lauf,
+einschließlich separat gekennzeichneter Liquidationsereignisse.
 Der [Bot-Reifebericht](docs/readiness.md) prüft Protokoll, Forward-Fortschritt,
 Vertragsdaten, PAPER-Sperre und den optionalen persönlichen Nur-Lese-Nachweis und
 zeigt die verbleibenden Einsatzhindernisse im Dashboard.
@@ -258,6 +261,18 @@ Einträge inklusive der noch offenen letzten Kerze; diese wird ausgeschlossen.
 Für längere Zeiträume unterstützt `import-kraken` lokale offizielle Archiv-CSVs.
 Ein kurzer Download prüft die Datenpipeline, ist keine ausreichende Grundlage
 für Strategie- oder Profitabilitätsaussagen.
+
+Aktuelle öffentliche PF_XBTUSD-Einzeltrades lassen sich ohne Zugangsdaten und
+ohne Orderfunktion begrenzt erfassen:
+
+```bash
+.venv/bin/python -m app.market_data.kraken_futures_trades \
+  --output data/evidence/kraken_pf_xbtusd_recent_trades_NEUER_NAME \
+  --pages 100
+```
+
+Der Sammler speichert Rohseiten, normalisierte Trades und Prüfsummen. Jeder Lauf
+benötigt einen neuen Ausgabeordner.
 
 ## Modi und Sicherheitsprinzipien
 

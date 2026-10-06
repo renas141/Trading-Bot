@@ -28,6 +28,7 @@ trading-adaptive-protocol-v2 = "backtesting.adaptive_forward_protocol_v2:main"
 trading-adaptive-research-v2 = "backtesting.adaptive_forward_research_v2:main"
 trading-regime-2026-diagnostic = "backtesting.regime_2026_diagnostic:main"
 trading-crash-2022-diagnostic = "backtesting.market_crash_2022_diagnostic:main"
+trading-kraken-recent-trades = "app.market_data.kraken_futures_trades:main"
 
 [tool.setuptools.packages.find]
 include = ["app*", "backtesting*", "dashboard*"]

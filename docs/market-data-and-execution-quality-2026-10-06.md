@@ -74,3 +74,17 @@ Die Prüfung berechnet für LONG und SHORT jeweils einen nachteiligen Einstiegs-
 und Stop-Fill. Sie ist fail-closed: Fehlen belastbare aktuelle Ausführungsdaten,
 darf kein späterer Orderpfad daraus eine Freigabe ableiten. PAPER und LIVE
 bleiben bis zum bestandenen Zukunftstest ausgeschaltet.
+
+## Öffentlicher Livemarktzugang
+
+Der neue Einzeltrade-Sammler hat 10.000 eindeutige PF_XBTUSD-Ausführungen aus
+rund 70 Minuten geladen. Der Bestand umfasst 138,1533 BTC beziehungsweise rund
+11,91 Mio. USD Gegenwert, 4.857 Käufer- und 5.143 Verkäufer-Trades sowie acht
+separat gekennzeichnete Teilliquidationen. Sämtliche 100 Rohseiten und die
+normalisierte CSV sind per SHA-256 gebunden. Einzelheiten stehen im
+[Livemarktbericht](kraken-live-trades-2026-10-06.md).
+
+Der Abruf bestätigt einen belastbaren öffentlichen Marktlesezugang. Er bestätigt
+weder die persönliche Kontoberechtigung noch eine erzielbare reale Ausführung.
+Der persönliche Nur-Lese-Nachweis benötigt weiterhin einen lokal gesetzten,
+eng begrenzten Kraken-Schlüssel.

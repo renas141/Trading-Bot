@@ -50,8 +50,8 @@ und Secret werden nicht gespeichert.
 
 ## Aktueller Stand am 06.10.2026
 
-- 72 lückenlose Pakete bis 06.10.2026, 08:00 UTC, davon 55 vorab ausgeschlossen;
-- 17 von 180 neuen Screen-Blöcken, entsprechend 9,44 Prozent;
+- 73 lückenlose Pakete bis 06.10.2026, 12:00 UTC, davon 55 vorab ausgeschlossen;
+- 18 von 180 neuen Screen-Blöcken, entsprechend 10,00 Prozent;
 - Screen frühestens nach dem Block bis 02.11.2026, 12:00 UTC auswertbar;
 - der 360-Blöcke-Holdout darf nur nach bestandenem Screen geöffnet werden;
 - öffentlicher PF_XBTUSD-Vertrag und 10x-Obergrenze bestätigt;
@@ -70,7 +70,11 @@ Trade-/Mark-Zeitpunkt am 23.03.2022 erweitert und umfasst jetzt 9.877 lückenlos
 Vierstundenblöcke. In der 2022-Crashdiagnose war die kurze 1-/4-Wochen-Regel in
 beiden Kostenfällen positiv, die langsame 30-/120-Tage-Regel negativ. Wegen des
 schwachen kurzen Modells im Jahr 2025 wird daraus keine rückwirkende Auswahl.
-Der aktive adaptive v2-Forward-Test steht bei 3 von 180 Blöcken.
+Der aktive adaptive v2-Forward-Test steht bei 4 von 180 Blöcken. Der öffentliche
+Livemarktzugang wurde zusätzlich mit 10.000 eindeutigen Einzeltrades und acht
+separat erhaltenen Teilliquidationen geprüft. Ein begrenzter Echtzeit-PAPER-Lauf
+verarbeitete drei neue Beobachtungen fehlerfrei, blieb aber mangels bestandenen
+Screens ohne Position.
 
 Zusätzlich zeigt der Bericht den getrennten
 [adaptiven Paralleltest](adaptive-leverage-safety-2026-10-05.md). Dessen Regeln
