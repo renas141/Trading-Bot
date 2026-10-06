@@ -55,14 +55,15 @@ dienen die Pakete nur dem Aufbau eines unabhängigen Forward-Zeitraums.
 
 ## Manueller Stand am 06.10.2026
 
-Die manuellen Nachholungen bis 06.10.2026 haben dreizehn weitere abgeschlossene Blöcke
-erstellt. Damit liegen 69 lückenlose und vollständig per Prüfsumme bestätigte
-Pakete vom 24.09.2026, 08:00 UTC bis 05.10.2026, 20:00 UTC vor. Davon gehören
-55 Pakete zum vorab ausgeschlossenen Integritätszeitraum und vierzehn zum ersten
+Die manuellen Nachholungen bis 06.10.2026 haben sechzehn weitere abgeschlossene Blöcke
+erstellt. Damit liegen 72 lückenlose und vollständig per Prüfsumme bestätigte
+Pakete vom 24.09.2026, 08:00 UTC bis 06.10.2026, 08:00 UTC vor. Davon gehören
+55 Pakete zum vorab ausgeschlossenen Integritätszeitraum und siebzehn zum ersten
 Forward-Screen. Für eine Screen-Auswertung werden unverändert 180 neue Pakete
 bis voraussichtlich 02.11.2026, 12:00 UTC benötigt. Es wurde keine geplante oder
 wiederkehrende Aufgabe eingerichtet.
 
 Eine zweite Regel wurde am 05.10.2026 vor ihrem ersten zulässigen Block separat
-eingefroren. Die aktive korrigierte v2 beginnt um 20:00 UTC. Ihre Ergebnisse und Fortschritte
+eingefroren. Die aktive korrigierte v2 beginnt um 20:00 UTC und steht bei drei
+von 180 Screen-Blöcken. Ihre Ergebnisse und Fortschritte
 werden getrennt gezählt; Pakete vor diesem Zeitpunkt sind für sie nur Warm-up.

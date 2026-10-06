@@ -55,6 +55,23 @@ class KrakenFuturesHistoryTests(unittest.TestCase):
             self.assertEqual(len(manifest["source"]["pages"]["trade"]), 2)
             self.assertIn("seen development", manifest["source"]["purpose"])
 
+    def test_gap_failure_reports_missing_interval_before_cleanup(self):
+        def transport(url):
+            kind = urlsplit(url).path.split("/")[4]
+            rows = json.loads(payload(START, 3, False))
+            if kind == "trade":
+                del rows["candles"][1]
+            return json.dumps(rows).encode()
+
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "history"
+            with self.assertRaisesRegex(ValueError, "missing_intervals"):
+                download(
+                    output, START, START + STEP * 3, transport,
+                    clock=lambda: START + timedelta(days=2),
+                )
+            self.assertFalse(output.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

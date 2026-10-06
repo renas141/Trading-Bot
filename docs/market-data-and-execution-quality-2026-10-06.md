@@ -19,6 +19,31 @@ scheiterte an fehlenden Stunden in der öffentlichen Kraken-Reihe. Es wurden
 keine Werte ergänzt. Die Diagnose verwendet deshalb dieselbe vorab festgelegte
 adverse Funding-Sensitivität wie die ältere Entwicklungsstudie.
 
+Zusätzlich wurde die öffentliche PF_XBTUSD-Historie rückwärts geprüft. Trade-
+und Mark-Reihen besitzen erst ab 23.03.2022, 08:00 UTC einen gemeinsamen,
+lückenlosen Vierstundenbeginn. Davor fehlen 488 Trade- beziehungsweise 483
+Mark-Intervalle, und die ersten Zeitachsen stimmen nicht überein. Diese Werte
+wurden nicht ergänzt. Ab dem gemeinsamen Beginn bis Ende 2022 wurden 1.702
+weitere Blöcke gesichert. Der gesamte geprüfte Bestand umfasst damit 9.877
+Vierstundenblöcke von März 2022 bis September 2026.
+
+## 2022-Crashdiagnose
+
+Mangels lückenloser Regimedaten wurden nur zwei bereits vorhandene preisbasierte
+Regeln unverändert geprüft:
+
+| Regel | Kostenfall | Trades | Netto | Profitfaktor | Max. Drawdown | Max. Hebel |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 30-/120-Tage | beobachtetes p95 | 17 | -15,00 USD | 0,77 | 4,28 % | 2x |
+| 30-/120-Tage | doppelte Kosten | 17 | -19,92 USD | 0,70 | 4,58 % | 2x |
+| 1-/4-Wochen | beobachtetes p95 | 44 | +35,09 USD | 1,19 | 4,71 % | 3x |
+| 1-/4-Wochen | doppelte Kosten | 44 | +20,02 USD | 1,11 | 4,77 % | 3x |
+
+Es gab keine Liquidation. Die kurze Regel reagierte im Crashjahr besser, war
+aber 2025 schwach. Sie wird deshalb nicht rückwirkend ausgewählt. Das Ergebnis
+begründet höchstens eine neue Mehrhorizont-Hypothese für einen späteren,
+getrennten Zukunftstest.
+
 ## 2026-Diagnose
 
 Die unveränderte regimebestätigte Momentumregel wurde auf den neu geöffneten

@@ -48,6 +48,9 @@ implementierte profitable Handelsstrategie**.
 - einen begrenzten PF_XBTUSD-Historienabruf mit Pagination, Prüfsummen und
   lückenloser Trade-/Mark-Abstimmung sowie eine getrennte
   [2026-Entwicklungsdiagnose](docs/market-data-and-execution-quality-2026-10-06.md),
+- eine getrennte PF_XBTUSD-Crashdiagnose ab dem frühesten gemeinsamen
+  Trade-/Mark-Zeitpunkt im März 2022; fehlende frühere Kerzen werden ausgewiesen
+  und nicht aufgefüllt,
 - eine vorgeschaltete Ausführungsprüfung, die alte oder stark abweichende Quotes,
   breite Spreads und ein zu schlechtes Kosten-/Stop-Verhältnis ablehnt.
 - einen begrenzt gestarteten, wiederaufnehmbaren PF_XBTUSD-Echtzeit-Paperbeobachter

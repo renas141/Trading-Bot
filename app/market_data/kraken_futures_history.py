@@ -106,7 +106,21 @@ def download(output: Path, start: datetime, end: datetime,
                     raise ValueError(f"Kraken {kind} history exceeded page limit")
             quality = build_dataset(output, files["trade"], files["mark"], start, end)
         if quality["ready"] is not True:
-            raise ValueError("Kraken futures history failed quality checks")
+            compact = {
+                kind: {
+                    "rows": quality[kind]["rows"],
+                    "expected_rows": quality[kind]["expected_rows"],
+                    "missing_intervals": quality[kind]["missing_intervals"],
+                    "gaps": quality[kind]["gaps"][:12],
+                    "errors": quality[kind]["errors"],
+                }
+                for kind in ("trade", "mark")
+            }
+            compact["timestamps_match"] = quality["timestamps_match"]
+            raise ValueError(
+                "Kraken futures history failed quality checks: "
+                + json.dumps(compact, ensure_ascii=False)
+            )
         manifest_path = output / "manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         manifest["captured_at"] = captured.astimezone(timezone.utc).isoformat()
