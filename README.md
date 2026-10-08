@@ -243,6 +243,10 @@ einschließlich separat gekennzeichneter Liquidationsereignisse.
 Der [Bot-Reifebericht](docs/readiness.md) prüft Protokoll, Forward-Fortschritt,
 Vertragsdaten, PAPER-Sperre und den optionalen persönlichen Nur-Lese-Nachweis und
 zeigt die verbleibenden Einsatzhindernisse im Dashboard.
+Ein separater technischer Qualifikationslauf bindet die getesteten LONG-/SHORT-
+Lebenszyklen von 1x bis 10x, Funding-Liquidation, Kurslücken-Enthebelung,
+Ablehnung bei fehlender Markttiefe, Wiederaufnahme und LIVE-Sperre an die
+Prüfsummen der sicherheitsrelevanten Quelldateien.
 
 ## Historische Kraken-Daten
 

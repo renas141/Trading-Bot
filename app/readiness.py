@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from app.derivatives.qualification import source_hashes as qualification_source_hashes
 from app.exchange.kraken_futures_instrument import load_snapshot
 from app.exchange.kraken_futures_readonly import configuration_status
 from app.market_data.kraken_perpetual_forward import STEP, load_bundle
@@ -38,6 +39,7 @@ class ReadinessPaths:
     account_summary: Path
     adaptive_protocol: Path
     adaptive_amendment: Path
+    technical_qualification: Path
 
 
 DEFAULT_PATHS = ReadinessPaths(
@@ -50,6 +52,7 @@ DEFAULT_PATHS = ReadinessPaths(
     Path("data/evidence/kraken-readonly/account-summary.json"),
     Path("data/research/perpetual_adaptive_forward_20261005_v2/protocol.json"),
     Path("data/research/perpetual_adaptive_forward_20261005_v2/protocol.json"),
+    Path("data/readiness/technical-qualification.json"),
 )
 
 
@@ -57,7 +60,7 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _forward_progress(root: Path) -> dict:
+def _verified_forward_rows(root: Path) -> list[tuple[Path, datetime, datetime]]:
     rows = []
     for path in sorted(candidate for candidate in root.glob("pf_xbtusd_*") if candidate.is_dir()):
         manifest = load_bundle(path)
@@ -68,6 +71,10 @@ def _forward_progress(root: Path) -> dict:
     for previous, current in zip(rows, rows[1:]):
         if previous[2] != current[1]:
             raise ValueError("PF_XBTUSD forward evidence has a gap or overlap")
+    return rows
+
+
+def _forward_progress(rows: list[tuple[Path, datetime, datetime]]) -> dict:
     post = [row for row in rows if row[1] >= FORWARD_START]
     if post and post[0][1] != FORWARD_START:
         raise ValueError("PF_XBTUSD post-cutoff evidence starts late")
@@ -164,7 +171,10 @@ def _private_account(path: Path, configured: dict) -> dict:
     return result
 
 
-def _adaptive_candidate(paths: ReadinessPaths) -> dict:
+def _adaptive_candidate(
+    paths: ReadinessPaths,
+    verified_rows: list[tuple[Path, datetime, datetime]],
+) -> dict:
     if not paths.adaptive_protocol.is_file():
         return {
             "status": "not_frozen", "verified": False, "collected": 0,
@@ -173,13 +183,8 @@ def _adaptive_candidate(paths: ReadinessPaths) -> dict:
     protocol = read_adaptive_protocol(
         paths.adaptive_protocol, paths.cost_candidate, paths.cost_summary
     )
-    rows = []
-    for path in sorted(candidate for candidate in paths.forward_root.glob("pf_xbtusd_*")
-                       if candidate.is_dir()):
-        manifest = load_bundle(path)
-        start = datetime.fromisoformat(manifest["start"])
-        if start >= ADAPTIVE_FORWARD_START:
-            rows.append((start, datetime.fromisoformat(manifest["end"])))
+    rows = [(start, end) for _, start, end in verified_rows
+            if start >= ADAPTIVE_FORWARD_START]
     if rows:
         if rows[0][0] != ADAPTIVE_FORWARD_START:
             raise ValueError("Adaptive forward evidence starts late")
@@ -200,10 +205,42 @@ def _adaptive_candidate(paths: ReadinessPaths) -> dict:
     }
 
 
+def _technical_qualification(path: Path) -> dict:
+    if not path.is_file():
+        return {"status": "not_generated", "verified": False, "live_enabled": False}
+    if path.stat().st_size > 1_000_000:
+        raise ValueError("Technical qualification report is too large")
+    value = json.loads(path.read_text(encoding="utf-8"))
+    checks = value.get("checks")
+    expected = {
+        "long_short_leverage_lifecycles",
+        "funding_adjusted_liquidation",
+        "tail_gap_deleveraging",
+        "unavailable_depth_rejection",
+        "event_chain_recovery",
+        "live_lock",
+    }
+    if (value.get("schema_version") != 1 or value.get("market") != "PF_XBTUSD"
+            or value.get("mode") != "PAPER" or value.get("passed") is not True
+            or value.get("live_enabled") is not False or not isinstance(checks, dict)
+            or set(checks) != expected
+            or not all(isinstance(check, dict) and check.get("passed") is True
+                       for check in checks.values())
+            or value.get("source_sha256") != qualification_source_hashes()):
+        raise ValueError("Technical qualification report is invalid or stale")
+    return {
+        "status": "passed", "verified": True,
+        "generated_at": value.get("generated_at"),
+        "checks": {name: True for name in sorted(expected)},
+        "live_enabled": False,
+    }
+
+
 def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
                     environ: dict[str, str] | None = None) -> dict:
     protocol, _ = read_protocol(paths.protocol, paths.cost_candidate, paths.cost_summary)
-    forward = _forward_progress(paths.forward_root)
+    verified_rows = _verified_forward_rows(paths.forward_root)
+    forward = _forward_progress(verified_rows)
     instrument = load_snapshot(paths.instrument_snapshot)
     if instrument.get("ready_for_research") is not True or instrument.get("live_enabled") is not False:
         raise ValueError("Current PF_XBTUSD instrument evidence is not research-ready")
@@ -213,7 +250,8 @@ def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
     paper = _paper_status(paths.paper_root)
     configured_account = configuration_status(os.environ if environ is None else environ)
     account = _private_account(paths.account_summary, configured_account)
-    adaptive = _adaptive_candidate(paths)
+    adaptive = _adaptive_candidate(paths, verified_rows)
+    technical = _technical_qualification(paths.technical_qualification)
 
     screen_data_complete = forward["screen"]["collected"] == SCREEN_BLOCKS
     holdout_data_complete = forward["holdout"]["collected"] == TOTAL_BLOCKS - SCREEN_BLOCKS
@@ -229,8 +267,10 @@ def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
         overall = "collecting_holdout"
     elif holdout["status"] == "not_evaluated":
         overall = "holdout_ready_for_evaluation"
-    elif holdout["passed"]:
+    elif holdout["passed"] and technical["verified"]:
         overall = "paper_candidate"
+    elif holdout["passed"]:
+        overall = "technical_qualification_required"
     else:
         overall = "hypothesis_failed"
 
@@ -250,6 +290,8 @@ def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
         blockers.append("Holdout ist vollständig, aber noch nicht ausgewertet")
     elif holdout["status"] == "failed":
         blockers.append("Die Hypothese hat den unabhängigen Holdout nicht bestanden")
+    if not technical["verified"]:
+        blockers.append("Technische Derivatequalifikation ist nicht aktuell bestätigt")
     if not account["verified"]:
         blockers.append("Persönlicher Kraken-Lesezugang und Produktberechtigung sind nicht bestätigt")
     blockers.append("Kraken stellt am früheren Host keine nutzbare Demo-Umgebung mehr bereit")
@@ -261,7 +303,7 @@ def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
         "market": "PF_XBTUSD",
         "overall_status": overall,
         "profitability_proven": profitable,
-        "paper_candidate": profitable,
+        "paper_candidate": profitable and technical["verified"],
         "live_enabled": False,
         "gates": {
             "frozen_protocol": {"verified": protocol.get("protocol_version") is not None},
@@ -277,6 +319,7 @@ def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
             "private_account": account,
             "demo_environment": {"available": False, "status": "legacy_host_decommissioned"},
             "adaptive_candidate": adaptive,
+            "technical_qualification": technical,
         },
         "blockers": blockers,
         "user_actions": ([
@@ -322,11 +365,13 @@ def main(argv=None) -> int:
     parser.add_argument("--adaptive-protocol", type=Path, default=DEFAULT_PATHS.adaptive_protocol)
     parser.add_argument("--adaptive-amendment", type=Path,
                         default=DEFAULT_PATHS.adaptive_amendment)
+    parser.add_argument("--technical-qualification", type=Path,
+                        default=DEFAULT_PATHS.technical_qualification)
     args = parser.parse_args(argv)
     paths = ReadinessPaths(args.forward_root, args.protocol, args.cost_candidate,
                            args.cost_summary, args.instrument_snapshot, args.paper_root,
                            args.account_summary, args.adaptive_protocol,
-                           args.adaptive_amendment)
+                           args.adaptive_amendment, args.technical_qualification)
     try:
         report = build_readiness(paths)
         write_report(args.output, report)

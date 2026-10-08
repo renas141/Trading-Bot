@@ -5,6 +5,10 @@ from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
+from app.derivatives.qualification import (
+    build_report as build_qualification,
+    write_report as write_qualification,
+)
 from app.readiness import (
     FORWARD_START,
     ReadinessPaths,
@@ -34,6 +38,7 @@ class ReadinessTests(unittest.TestCase):
         self.account_summary = self.root / "account-summary.json"
         self.adaptive_protocol = self.root / "adaptive" / "protocol.json"
         self.adaptive_amendment = self.root / "adaptive" / "amendment.json"
+        self.technical_qualification = self.root / "technical-qualification.json"
         observer = self.paper / "pf_xbtusd_realtime_observer"
         observer.mkdir(parents=True)
         (observer / "status.json").write_text(json.dumps({
@@ -44,6 +49,7 @@ class ReadinessTests(unittest.TestCase):
             self.forward, self.protocol, self.cost_candidate, self.cost_summary,
             self.instrument, self.paper, self.account_summary,
             self.adaptive_protocol, self.adaptive_amendment,
+            self.technical_qualification,
         )
 
     def _make_bundles(self, count=58):
@@ -77,6 +83,7 @@ class ReadinessTests(unittest.TestCase):
         self.assertFalse(report["gates"]["private_account"]["configured"])
         self.assertFalse(report["gates"]["private_account"]["verified"])
         self.assertEqual(report["gates"]["paper_observer"]["observations"], 1)
+        self.assertFalse(report["gates"]["technical_qualification"]["verified"])
 
         output = self.root / "readiness" / "status.json"
         write_report(output, report)
@@ -119,6 +126,34 @@ class ReadinessTests(unittest.TestCase):
                   "ready_for_research": True, "live_enabled": False,
               })):
             with self.assertRaisesRegex(ValueError, "gap"):
+                build_readiness(self.paths, {})
+
+    def test_current_technical_qualification_is_verified_and_tampering_fails(self):
+        manifests = self._make_bundles()
+        write_qualification(self.technical_qualification, build_qualification())
+        instrument = {
+            "ready_for_research": True, "live_enabled": False,
+            "server_time": "2026-10-04T00:00:00Z",
+            "public_contract": {"maximum_leverage_from_first_tier": 10},
+        }
+        patches = (
+            patch("app.readiness.read_protocol",
+                  return_value=({"protocol_version": "test"}, object())),
+            patch("app.readiness.load_bundle", side_effect=lambda path: manifests[path]),
+            patch("app.readiness.load_snapshot", return_value=instrument),
+        )
+        with patches[0], patches[1], patches[2]:
+            report = build_readiness(self.paths, {})
+        self.assertTrue(report["gates"]["technical_qualification"]["verified"])
+
+        value = json.loads(self.technical_qualification.read_text())
+        value["source_sha256"]["app/derivatives/risk.py"] = "0" * 64
+        self.technical_qualification.write_text(json.dumps(value))
+        with (patch("app.readiness.read_protocol",
+                    return_value=({"protocol_version": "test"}, object())),
+              patch("app.readiness.load_bundle", side_effect=lambda path: manifests[path]),
+              patch("app.readiness.load_snapshot", return_value=instrument)):
+            with self.assertRaisesRegex(ValueError, "invalid or stale"):
                 build_readiness(self.paths, {})
 
 

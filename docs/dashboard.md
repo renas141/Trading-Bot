@@ -66,6 +66,10 @@ persönlichen Nur-Lese-Zugang, Profitabilitätsnachweis und alle derzeitigen
 Sperrgründe. Die Anzeige liest `data/readiness/status.json` und aktualisiert sich
 mit „Neu laden“. Sie startet keine Sammlung oder Auswertung und kann keine
 Handelsfreigabe ändern.
+Die technische Sicherheitskarte bestätigt nur dann 1x bis 10x, Funding,
+Kurslückenstress, Ablehnung ohne beobachtete Markttiefe, Wiederaufnahme und
+LIVE-Sperre, wenn der separate Qualifikationsbericht zu den aktuellen
+Prüfsummen des Programmcodes passt.
 Der dort getrennt ausgewiesene „Paralleltest v2“ gehört zur
 [adaptiven Hebel- und Entscheidungsvariante](adaptive-leverage-safety-2026-10-05.md)
 und wird nicht mit dem ersten Forward-Screen zusammengerechnet.

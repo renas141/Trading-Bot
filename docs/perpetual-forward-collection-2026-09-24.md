@@ -53,17 +53,17 @@ chronologisch nachholen, höchstens 42 pro Lauf. Strategien dürfen erst nach ei
 vorab festgelegten Mindestdauer auf die neuen Outcomes zugreifen. Bis dahin
 dienen die Pakete nur dem Aufbau eines unabhängigen Forward-Zeitraums.
 
-## Manueller Stand am 06.10.2026
+## Manueller Stand am 08.10.2026
 
-Die manuellen Nachholungen bis 06.10.2026 haben insgesamt 75 lückenlose und
+Die manuellen Nachholungen bis 08.10.2026 haben insgesamt 87 lückenlose und
 vollständig per Prüfsumme bestätigte Pakete vom 24.09.2026, 08:00 UTC bis
-06.10.2026, 20:00 UTC erstellt. Davon gehören 55 Pakete zum vorab ausgeschlossenen
-Integritätszeitraum und zwanzig zum ersten
+08.10.2026, 20:00 UTC erstellt. Davon gehören 55 Pakete zum vorab ausgeschlossenen
+Integritätszeitraum und 32 zum ersten
 Forward-Screen. Für eine Screen-Auswertung werden unverändert 180 neue Pakete
 bis voraussichtlich 02.11.2026, 12:00 UTC benötigt. Es wurde keine geplante oder
 wiederkehrende Aufgabe eingerichtet.
 
 Eine zweite Regel wurde am 05.10.2026 vor ihrem ersten zulässigen Block separat
-eingefroren. Die aktive korrigierte v2 beginnt um 20:00 UTC und steht bei sechs
+eingefroren. Die aktive korrigierte v2 beginnt um 20:00 UTC und steht bei 18
 von 180 Screen-Blöcken. Ihre Ergebnisse und Fortschritte
 werden getrennt gezählt; Pakete vor diesem Zeitpunkt sind für sie nur Warm-up.

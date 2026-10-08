@@ -20,7 +20,19 @@ Geprüft werden:
 - aktueller öffentliche Vertragsnachweis einschließlich der EWR-Obergrenze von
   10x;
 - gesperrter PAPER-Status;
+- ein quellgebundener technischer Nachweis für LONG/SHORT bei 1x bis 10x,
+  Funding-Liquidation, Kurslücken-Enthebelung, Ablehnung bei fehlender
+  Markttiefe, manipulationssichere Wiederaufnahme und die LIVE-Sperre;
 - ein optionaler, entschärfter Nachweis des persönlichen Kraken-Lesezugangs.
+
+Der technische Nachweis wird reproduzierbar erzeugt und anschließend anhand der
+Prüfsummen aller sicherheitsrelevanten Quelldateien kontrolliert:
+
+```bash
+.venv/bin/python -m app.derivatives.qualification \
+  --output data/readiness/technical-qualification.json
+.venv/bin/python -m app.readiness --output data/readiness/status.json
+```
 
 Das Dashboard liest anschließend ausschließlich
 `data/readiness/status.json`. Der Bericht enthält keine Zugangsdaten und bleibt
@@ -48,13 +60,17 @@ nur Rechte, Zähler, Zugänglichkeit und Berechtigung für PF_XBTUSD sowie die
 persönliche Mindestmenge. Rohantworten, Kontosalden, Positionen, Fills, Schlüssel
 und Secret werden nicht gespeichert.
 
-## Aktueller Stand am 06.10.2026
+## Aktueller Stand am 08.10.2026
 
-- 75 lückenlose Pakete bis 06.10.2026, 20:00 UTC, davon 55 vorab ausgeschlossen;
-- 20 von 180 neuen Screen-Blöcken, entsprechend 11,11 Prozent;
+- 87 lückenlose Pakete bis 08.10.2026, 20:00 UTC, davon 55 vorab ausgeschlossen;
+- 32 von 180 neuen Screen-Blöcken, entsprechend 17,78 Prozent;
 - Screen frühestens nach dem Block bis 02.11.2026, 12:00 UTC auswertbar;
 - der 360-Blöcke-Holdout darf nur nach bestandenem Screen geöffnet werden;
 - öffentlicher PF_XBTUSD-Vertrag und 10x-Obergrenze bestätigt;
+- technische LONG-/SHORT-Lebenszyklen von 1x bis 10x, dynamische
+  Funding-Liquidation, Enthebelung unter 10-Prozent-Kurslückenstress, sichere
+  Ablehnung ohne beobachtete Markttiefe, Wiederaufnahme nach Neustart und
+  unverrückbare LIVE-Sperre bestätigt;
 - persönlicher Lesezugang noch nicht bestätigt;
 - Profitabilität nicht nachgewiesen, kein PAPER-Kandidat, LIVE gesperrt.
 
@@ -70,12 +86,12 @@ Trade-/Mark-Zeitpunkt am 23.03.2022 erweitert und umfasst jetzt 9.877 lückenlos
 Vierstundenblöcke. In der 2022-Crashdiagnose war die kurze 1-/4-Wochen-Regel in
 beiden Kostenfällen positiv, die langsame 30-/120-Tage-Regel negativ. Wegen des
 schwachen kurzen Modells im Jahr 2025 wird daraus keine rückwirkende Auswahl.
-Der aktive adaptive v2-Forward-Test steht bei 6 von 180 Blöcken. Der öffentliche
+Der aktive adaptive v2-Forward-Test steht bei 18 von 180 Blöcken. Der öffentliche
 Livemarktzugang wurde zusätzlich mit 50.000 eindeutigen Einzeltrades und 79
 separat erhaltenen Liquidationsereignissen geprüft. Der Echtzeit-PAPER-Lauf
 verwendet jetzt zusätzlich Krakens öffentlichen Markpreis für Liquidation,
 Kontowert und Funding sowie aktuelle Bid-/Ask-Preise für Stopps und simulierte
-Ausführungen. Ein begrenzter Lauf verarbeitete zehn Beobachtungen fehlerfrei,
+Ausführungen. Ein begrenzter Lauf verarbeitete 15 Beobachtungen fehlerfrei,
 blieb aber mangels bestandenen Screens ohne Position.
 
 Zusätzlich zeigt der Bericht den getrennten

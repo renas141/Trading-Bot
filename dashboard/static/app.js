@@ -86,6 +86,7 @@ async function loadReadiness() {
       collecting_forward_screen: "Screen läuft", screen_ready_for_evaluation: "Screen auswerten",
       collecting_holdout: "Holdout läuft", holdout_ready_for_evaluation: "Holdout auswerten",
       paper_candidate: "PAPER-Kandidat", hypothesis_failed: "Hypothese beendet",
+      technical_qualification_required: "Technikprüfung fehlt",
       not_generated: "Nicht erzeugt"
     };
     text("readiness-status", labels[report.overall_status] || report.overall_status);
@@ -103,6 +104,9 @@ async function loadReadiness() {
     const adaptive = report.gates.adaptive_candidate || {};
     text("readiness-adaptive", adaptive.required == null ? "—" : `${number.format(adaptive.collected || 0)} / ${number.format(adaptive.required)}`);
     text("readiness-adaptive-note", adaptive.verified ? "Getrennt eingefroren · 0,5 % / 1,25 % Risiko" : "Protokoll nicht bestätigt");
+    const technical = report.gates.technical_qualification || {};
+    text("readiness-technical", technical.verified ? "Bestanden" : "Offen");
+    text("readiness-technical-note", technical.verified ? "1x–10x · Funding · Tiefe · Neustart · LIVE-Sperre" : "Qualifikationsnachweis fehlt");
     text("readiness-blockers", (report.blockers || []).length ? report.blockers.join(" · ") : "Alle vorab festgelegten Prüfungen sind erfüllt.");
     text("readiness-time", report.generated_at ? `Reifebericht vom ${dateTime.format(new Date(report.generated_at))} UTC · LIVE bleibt aus.` : "Noch kein Reifebericht vorhanden · LIVE bleibt aus.");
   } catch (error) {
