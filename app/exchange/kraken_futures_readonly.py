@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import base64
 import binascii
+import getpass
 import hashlib
 import hmac
 import json
@@ -217,6 +218,17 @@ def configuration_status(environ: dict[str, str] | None = None) -> dict:
     }
 
 
+def prompt_credentials(
+    prompt_secret: Callable[[str], str] = getpass.getpass,
+) -> tuple[str, str]:
+    """Read credentials without echoing or persisting either value."""
+    api_key = prompt_secret("Kraken Derivatives API key (hidden): ").strip()
+    api_secret = prompt_secret("Kraken Derivatives API secret (hidden): ").strip()
+    if not api_key or not api_secret:
+        raise ConfigurationError("Kraken read-only credentials are missing")
+    return api_key, api_secret
+
+
 def write_verified_summary(path: Path, summary: dict) -> None:
     """Persist only the redacted verification result, never credentials or raw replies."""
     value = {
@@ -247,23 +259,28 @@ def write_verified_summary(path: Path, summary: dict) -> None:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Inspect Kraken Derivatives in read-only mode")
-    parser.add_argument("command", choices=("status", "verify"))
+    parser.add_argument("command", choices=("status", "verify", "verify-interactive"))
     parser.add_argument("--output", type=Path,
-                        help="Store a redacted verification summary (verify only)")
+                        help="Store a redacted verification summary")
     args = parser.parse_args(argv)
     if args.command == "status" and args.output is not None:
-        parser.error("--output is available only with verify")
+        parser.error("--output is available only with a verification command")
     status = configuration_status()
     if args.command == "status":
         print(json.dumps(status, indent=2))
         return 0
-    if not status["configured"]:
+    if args.command == "verify" and not status["configured"]:
         print("Read-only Kraken credentials are not configured", file=sys.stderr)
         return 2
     try:
+        if args.command == "verify-interactive":
+            api_key, api_secret = prompt_credentials()
+        else:
+            api_key = os.environ["KRAKEN_FUTURES_API_KEY"]
+            api_secret = os.environ["KRAKEN_FUTURES_API_SECRET"]
         client = KrakenFuturesReadonlyClient(
-            os.environ["KRAKEN_FUTURES_API_KEY"],
-            os.environ["KRAKEN_FUTURES_API_SECRET"],
+            api_key,
+            api_secret,
         )
         summary = client.account_snapshot().summary()
         if args.output is not None:

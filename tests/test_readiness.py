@@ -39,6 +39,7 @@ class ReadinessTests(unittest.TestCase):
         self.adaptive_protocol = self.root / "adaptive" / "protocol.json"
         self.adaptive_amendment = self.root / "adaptive" / "amendment.json"
         self.technical_qualification = self.root / "technical-qualification.json"
+        self.profit_protection_protocol = self.root / "profit-protection" / "protocol.json"
         observer = self.paper / "pf_xbtusd_realtime_observer"
         observer.mkdir(parents=True)
         (observer / "status.json").write_text(json.dumps({
@@ -50,6 +51,7 @@ class ReadinessTests(unittest.TestCase):
             self.instrument, self.paper, self.account_summary,
             self.adaptive_protocol, self.adaptive_amendment,
             self.technical_qualification,
+            self.profit_protection_protocol,
         )
 
     def _make_bundles(self, count=58):
@@ -84,6 +86,7 @@ class ReadinessTests(unittest.TestCase):
         self.assertFalse(report["gates"]["private_account"]["verified"])
         self.assertEqual(report["gates"]["paper_observer"]["observations"], 1)
         self.assertFalse(report["gates"]["technical_qualification"]["verified"])
+        self.assertFalse(report["gates"]["profit_protection_candidate"]["verified"])
 
         output = self.root / "readiness" / "status.json"
         write_report(output, report)
@@ -115,6 +118,7 @@ class ReadinessTests(unittest.TestCase):
         self.assertTrue(account["verified"])
         self.assertEqual(account["minimum_trade_size"], "0.0001")
         self.assertNotIn("API", json.dumps(account))
+        self.assertEqual(report["user_actions"], [])
 
     def test_gap_in_forward_evidence_is_rejected(self):
         manifests = self._make_bundles(2)

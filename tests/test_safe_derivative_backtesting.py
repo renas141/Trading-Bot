@@ -10,6 +10,7 @@ from app.strategies.base import Strategy
 from app.strategies.models import Signal
 from backtesting.safe_derivatives import SafeDerivativeBacktester
 from backtesting.safe_derivatives_v2 import SafeDerivativeBacktester as SafeDerivativeBacktesterV2
+from backtesting.safe_derivatives_v3 import ProfitProtectedDerivativeBacktester
 
 
 D = Decimal
@@ -47,6 +48,20 @@ class AlwaysLong(Strategy):
         return Signal(
             current.symbol, current.closed_at, Direction.LONG, D("1"), ("fixture",),
             self.name, self.version, D("99"), None, D("10"),
+        )
+
+
+class OneShort(Strategy):
+    name = "one_short"
+    version = "1"
+
+    def analyze(self, history):
+        current = history[-1]
+        direction = Direction.SHORT if len(history) == 1 else Direction.HOLD
+        return Signal(
+            current.symbol, current.closed_at, direction, D("1"), ("fixture",),
+            self.name, self.version, D("101") if direction == Direction.SHORT else None,
+            None, D("10"),
         )
 
 
@@ -94,6 +109,48 @@ class SafeDerivativeBacktestingTests(unittest.TestCase):
         self.assertEqual(result.entries, 1)
         self.assertEqual(len(result.trades), 1)
         self.assertEqual(result.trades[0].exit_reason, "END_OF_DATA")
+
+    def test_v3_break_even_stop_uses_close_and_only_applies_to_future_bars(self):
+        trade = [
+            candle(0),
+            candle(1, high="101.5", low="99.5", close="101"),
+            candle(2, open="101", high="101", low="99.5", close="100"),
+        ]
+        result = ProfitProtectedDerivativeBacktester(OneLong(), self.settings).run(
+            trade, trade, funding_rates=[D("0")] * len(trade)
+        )
+        self.assertEqual(result.entries, 1)
+        self.assertEqual(result.stop_updates, 1)
+        self.assertEqual(result.trades[0].exit_reason, "STOP_LOSS")
+        self.assertEqual(result.trades[0].position.stop_price, D("100"))
+        self.assertEqual(result.trades[0].net_pnl, D("0"))
+
+    def test_v3_profit_protection_is_symmetric_for_short_positions(self):
+        trade = [
+            candle(0),
+            candle(1, high="100.5", low="98.5", close="99"),
+            candle(2, open="99", high="100.5", low="99", close="100"),
+        ]
+        result = ProfitProtectedDerivativeBacktester(OneShort(), self.settings).run(
+            trade, trade, funding_rates=[D("0")] * len(trade)
+        )
+        self.assertEqual(result.stop_updates, 1)
+        self.assertEqual(result.trades[0].position.stop_price, D("100"))
+        self.assertEqual(result.trades[0].net_pnl, D("0"))
+
+    def test_v3_gap_through_break_even_uses_the_worse_next_open(self):
+        trade = [
+            candle(0),
+            candle(1, high="101.5", low="99.5", close="101"),
+            candle(2, open="99.5", high="100", low="99", close="99.5"),
+        ]
+        result = ProfitProtectedDerivativeBacktester(OneLong(), self.settings).run(
+            trade, trade, funding_rates=[D("0")] * len(trade)
+        )
+        self.assertEqual(result.stop_updates, 1)
+        self.assertEqual(result.trades[0].exit_reason, "STOP_GAP")
+        self.assertLess(result.trades[0].exit_price, D("100"))
+        self.assertLess(result.trades[0].net_pnl, D("0"))
 
 
 if __name__ == "__main__":

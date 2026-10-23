@@ -8,6 +8,7 @@ from app.errors import ConfigurationError, MarketDataError
 from app.exchange.kraken_futures_readonly import (
     KrakenFuturesReadonlyClient,
     configuration_status,
+    prompt_credentials,
     sign_request,
     write_verified_summary,
 )
@@ -97,6 +98,24 @@ class KrakenFuturesReadonlyTests(unittest.TestCase):
         self.assertFalse(status["configured"])
         self.assertFalse(status["order_capability"])
         self.assertFalse(status["credentials_persisted"])
+
+    def test_interactive_credentials_are_returned_only_in_memory(self):
+        answers = iter([" public-key ", f" {SECRET} "])
+        prompts = []
+
+        def hidden_prompt(prompt):
+            prompts.append(prompt)
+            return next(answers)
+
+        api_key, api_secret = prompt_credentials(hidden_prompt)
+        self.assertEqual(api_key, "public-key")
+        self.assertEqual(api_secret, SECRET)
+        self.assertEqual(len(prompts), 2)
+
+    def test_interactive_credentials_reject_missing_value(self):
+        answers = iter(["public-key", ""])
+        with self.assertRaisesRegex(ConfigurationError, "missing"):
+            prompt_credentials(lambda prompt: next(answers))
 
     def test_unknown_endpoint_cannot_be_signed(self):
         with self.assertRaises(ConfigurationError):

@@ -26,6 +26,11 @@ from backtesting.adaptive_forward_protocol_v2 import (
     SCREEN_BLOCKS as ADAPTIVE_SCREEN_BLOCKS,
     read_protocol as read_adaptive_protocol,
 )
+from backtesting.profit_protection_forward_protocol_v3 import (
+    FORWARD_START as PROFIT_PROTECTION_FORWARD_START,
+    SCREEN_BLOCKS as PROFIT_PROTECTION_SCREEN_BLOCKS,
+    read_protocol as read_profit_protection_protocol,
+)
 
 
 @dataclass(frozen=True)
@@ -40,6 +45,7 @@ class ReadinessPaths:
     adaptive_protocol: Path
     adaptive_amendment: Path
     technical_qualification: Path
+    profit_protection_protocol: Path
 
 
 DEFAULT_PATHS = ReadinessPaths(
@@ -53,6 +59,7 @@ DEFAULT_PATHS = ReadinessPaths(
     Path("data/research/perpetual_adaptive_forward_20261005_v2/protocol.json"),
     Path("data/research/perpetual_adaptive_forward_20261005_v2/protocol.json"),
     Path("data/readiness/technical-qualification.json"),
+    Path("data/research/perpetual_profit_protection_forward_20261010_v3/protocol.json"),
 )
 
 
@@ -236,6 +243,38 @@ def _technical_qualification(path: Path) -> dict:
     }
 
 
+def _profit_protection_candidate(
+    paths: ReadinessPaths,
+    verified_rows: list[tuple[Path, datetime, datetime]],
+) -> dict:
+    if not paths.profit_protection_protocol.is_file():
+        return {
+            "status": "not_frozen", "verified": False, "collected": 0,
+            "required": PROFIT_PROTECTION_SCREEN_BLOCKS, "live_enabled": False,
+        }
+    protocol = read_profit_protection_protocol(
+        paths.profit_protection_protocol, paths.cost_candidate, paths.cost_summary,
+    )
+    rows = [(start, end) for _, start, end in verified_rows
+            if start >= PROFIT_PROTECTION_FORWARD_START]
+    if rows:
+        if rows[0][0] != PROFIT_PROTECTION_FORWARD_START:
+            raise ValueError("Profit-protection forward evidence starts late")
+        for previous, current in zip(rows, rows[1:]):
+            if previous[1] != current[0]:
+                raise ValueError("Profit-protection forward evidence has a gap")
+    collected = min(len(rows), PROFIT_PROTECTION_SCREEN_BLOCKS)
+    return {
+        "status": "collecting_forward_screen", "verified": True,
+        "protocol_version": protocol["protocol_version"],
+        "forward_start": PROFIT_PROTECTION_FORWARD_START.isoformat(),
+        "collected": collected, "required": PROFIT_PROTECTION_SCREEN_BLOCKS,
+        "progress_percent": round(collected / PROFIT_PROTECTION_SCREEN_BLOCKS * 100, 2),
+        "profit_protection": "close-confirmed +1R trigger; entry-price stop next bar",
+        "maximum_leverage": 10, "paper_enabled": False, "live_enabled": False,
+    }
+
+
 def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
                     environ: dict[str, str] | None = None) -> dict:
     protocol, _ = read_protocol(paths.protocol, paths.cost_candidate, paths.cost_summary)
@@ -252,6 +291,7 @@ def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
     account = _private_account(paths.account_summary, configured_account)
     adaptive = _adaptive_candidate(paths, verified_rows)
     technical = _technical_qualification(paths.technical_qualification)
+    profit_protection = _profit_protection_candidate(paths, verified_rows)
 
     screen_data_complete = forward["screen"]["collected"] == SCREEN_BLOCKS
     holdout_data_complete = forward["holdout"]["collected"] == TOTAL_BLOCKS - SCREEN_BLOCKS
@@ -320,15 +360,16 @@ def build_readiness(paths: ReadinessPaths = DEFAULT_PATHS,
             "demo_environment": {"available": False, "status": "legacy_host_decommissioned"},
             "adaptive_candidate": adaptive,
             "technical_qualification": technical,
+            "profit_protection_candidate": profit_protection,
         },
         "blockers": blockers,
-        "user_actions": ([
+        "user_actions": ([] if account["verified"] else ([
             "Kraken-EWR-Derivatezugang im persönlichen Konto bestätigen.",
             "Einen separaten API-Schlüssel mit General READ_ONLY und Transfer NO_ACCESS anlegen.",
-            "Schlüssel nur lokal als Prozessvariablen bereitstellen; nicht im Chat oder in Git senden.",
+            "Schlüssel nur lokal verdeckt eingeben; nicht im Chat oder in Git senden.",
         ] if not account["configured"] else ([
             "Die lokale Nur-Lese-Prüfung ausführen und den entschärften Nachweis speichern."
-        ] if not account["verified"] else [])),
+        ]))),
     }
 
 
@@ -367,11 +408,14 @@ def main(argv=None) -> int:
                         default=DEFAULT_PATHS.adaptive_amendment)
     parser.add_argument("--technical-qualification", type=Path,
                         default=DEFAULT_PATHS.technical_qualification)
+    parser.add_argument("--profit-protection-protocol", type=Path,
+                        default=DEFAULT_PATHS.profit_protection_protocol)
     args = parser.parse_args(argv)
     paths = ReadinessPaths(args.forward_root, args.protocol, args.cost_candidate,
                            args.cost_summary, args.instrument_snapshot, args.paper_root,
                            args.account_summary, args.adaptive_protocol,
-                           args.adaptive_amendment, args.technical_qualification)
+                           args.adaptive_amendment, args.technical_qualification,
+                           args.profit_protection_protocol)
     try:
         report = build_readiness(paths)
         write_report(args.output, report)

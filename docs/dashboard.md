@@ -73,6 +73,9 @@ Prüfsummen des Programmcodes passt.
 Der dort getrennt ausgewiesene „Paralleltest v2“ gehört zur
 [adaptiven Hebel- und Entscheidungsvariante](adaptive-leverage-safety-2026-10-05.md)
 und wird nicht mit dem ersten Forward-Screen zusammengerechnet.
+„Gewinnschutz v3“ ist ein weiterer unabhängiger
+[Zukunftstest](profit-protection-forward-2026-10-10.md). Er verändert die beiden
+früheren Kandidaten nicht und darf sie bei einem Fehlschlag nicht ersetzen.
 
 ## Lesender Zugriff
 

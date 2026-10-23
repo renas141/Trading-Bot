@@ -46,7 +46,16 @@ Prozessvariablen `KRAKEN_FUTURES_API_KEY` und
 `KRAKEN_FUTURES_API_SECRET` eingelesen. Sie dürfen nicht in Git, eine Datei im
 Projekt oder einen Chat kopiert werden.
 
-Nach dem lokalen Setzen der beiden Variablen:
+Die einfachste Prüfung fragt beide Werte verdeckt ab und verwirft sie nach dem
+Prozess:
+
+```bash
+.venv/bin/python -m app.exchange.kraken_futures_readonly verify-interactive \
+  --output data/evidence/kraken-readonly/account-summary.json
+.venv/bin/python -m app.readiness --output data/readiness/status.json
+```
+
+Alternativ nach dem lokalen Setzen der beiden Variablen:
 
 ```bash
 .venv/bin/python -m app.exchange.kraken_futures_readonly verify \
@@ -60,10 +69,10 @@ nur Rechte, Zähler, Zugänglichkeit und Berechtigung für PF_XBTUSD sowie die
 persönliche Mindestmenge. Rohantworten, Kontosalden, Positionen, Fills, Schlüssel
 und Secret werden nicht gespeichert.
 
-## Aktueller Stand am 08.10.2026
+## Aktueller Stand am 23.10.2026
 
-- 87 lückenlose Pakete bis 08.10.2026, 20:00 UTC, davon 55 vorab ausgeschlossen;
-- 32 von 180 neuen Screen-Blöcken, entsprechend 17,78 Prozent;
+- 174 lückenlose Pakete bis 23.10.2026, 08:00 UTC, davon 55 vorab ausgeschlossen;
+- 119 von 180 neuen Screen-Blöcken, entsprechend 66,11 Prozent;
 - Screen frühestens nach dem Block bis 02.11.2026, 12:00 UTC auswertbar;
 - der 360-Blöcke-Holdout darf nur nach bestandenem Screen geöffnet werden;
 - öffentlicher PF_XBTUSD-Vertrag und 10x-Obergrenze bestätigt;
@@ -86,13 +95,28 @@ Trade-/Mark-Zeitpunkt am 23.03.2022 erweitert und umfasst jetzt 9.877 lückenlos
 Vierstundenblöcke. In der 2022-Crashdiagnose war die kurze 1-/4-Wochen-Regel in
 beiden Kostenfällen positiv, die langsame 30-/120-Tage-Regel negativ. Wegen des
 schwachen kurzen Modells im Jahr 2025 wird daraus keine rückwirkende Auswahl.
-Der aktive adaptive v2-Forward-Test steht bei 18 von 180 Blöcken. Der öffentliche
+Der aktive adaptive v2-Forward-Test steht bei 105 von 180 Blöcken. Der öffentliche
 Livemarktzugang wurde zusätzlich mit 50.000 eindeutigen Einzeltrades und 79
 separat erhaltenen Liquidationsereignissen geprüft. Der Echtzeit-PAPER-Lauf
 verwendet jetzt zusätzlich Krakens öffentlichen Markpreis für Liquidation,
 Kontowert und Funding sowie aktuelle Bid-/Ask-Preise für Stopps und simulierte
-Ausführungen. Ein begrenzter Lauf verarbeitete 15 Beobachtungen fehlerfrei,
+Ausführungen. Der begrenzte Lauf verarbeitete 30 Beobachtungen fehlerfrei,
 blieb aber mangels bestandenen Screens ohne Position.
+
+Am 10.10.2026 wurde vor dem nächsten noch nicht vorhandenen Vierstundenblock ein
+dritter, unabhängiger Zukunftstest gebunden. Er steht inzwischen bei 76 von 180
+Screen-Blöcken. Er verwendet dieselben adaptiven
+Einstiege und Risikostufen wie v2, zieht den Stop aber erst nach einem
+schlusskursbestätigten Gewinn von 1R ab der Folgekerze auf den Einstieg. Die
+Entwicklungsdiagnose hatte 2025 Verluste deutlich reduziert, den doppelten
+Kostenstress jedoch noch nicht bestanden. Deshalb startet dieser Test bei null
+und darf keinen früheren Kandidaten ersetzen oder retten.
+
+Die am 08.10.2026 aktualisierte öffentliche
+[Kraken-Gebührentabelle](https://support.kraken.com/articles/360048917612-fee-schedule)
+bestätigt weiterhin 0,05 Prozent Taker-Gebühr im niedrigsten Volumenband. Der
+Bot rechnet weiter konservativ mit diesem Satz je Ausführung und zusätzlich mit
+Spread, Slippage und tatsächlichem Funding.
 
 Zusätzlich zeigt der Bericht den getrennten
 [adaptiven Paralleltest](adaptive-leverage-safety-2026-10-05.md). Dessen Regeln

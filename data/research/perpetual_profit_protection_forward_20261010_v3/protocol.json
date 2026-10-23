@@ -1,0 +1,730 @@
+{
+  "protocol_version": "pf-xbtusd-profit-protection-forward-v3",
+  "created_at": "2026-10-10T13:33:59.354494+00:00",
+  "definition": {
+    "market": "PF_XBTUSD",
+    "symbol": "BTC/USD",
+    "timeframe": "4h",
+    "forward_start": "2026-10-10T16:00:00+00:00",
+    "hypothesis": "An agreed 2-day/7-day price trend with at least three of four delayed open-interest, aggressor-flow, CVD and funding confirmations produces more robust opportunities when three confirmations risk 0.5% and four risk 1.25%. After a completed candle reaches +1 initial risk, moving the stop to entry for subsequent candles should prevent favorable moves from becoming full losses.",
+    "motivation": "The earlier adaptive candidate remains unchanged. Separate 2023-2025 development showed that close-confirmed break-even protection materially reduced the failed 2025 long-bias loss, although it still failed double-cost stress. This independent future-only test combines that defensive exit with the adaptive entry candidate.",
+    "strategy": {
+      "name": "adaptive_funding_aware_momentum_perpetual",
+      "version": "0.2.0",
+      "parameters": {
+        "fast_momentum_bars": 12,
+        "slow_momentum_bars": 42,
+        "regime_change_bars": 42,
+        "funding_average_bars": 6,
+        "atr_period": 42,
+        "stop_atr_multiple": "3",
+        "requested_leverage": "10"
+      },
+      "price_gate": "2-day and 7-day close returns agree in a non-zero direction",
+      "confirmations": [
+        "7-day open interest rises",
+        "latest delayed aggressor differential agrees with direction",
+        "7-day delayed CVD change agrees with direction",
+        "directional current 4h funding is no worse than the prior 24h mean"
+      ],
+      "minimum_confirmations": 3,
+      "excluded": [
+        "numeric signal optimization",
+        "best-of-candidate selection",
+        "direction removal",
+        "fallback parameter set"
+      ]
+    },
+    "profit_protection": {
+      "trigger": "completed trade candle closes at or beyond +1 initial risk",
+      "new_stop": "entry price (0R), active from the following candle only",
+      "gap_execution": "worse next open when price gaps through the active stop",
+      "intrabar_assumption": "the calculation candle cannot hit its newly calculated stop",
+      "loosening": "forbidden"
+    },
+    "risk": {
+      "minimum_confidence": "0.8333333333333333333333333333",
+      "full_confidence": "1",
+      "partial_risk_fraction": "0.005",
+      "full_risk_fraction": "0.0125",
+      "tail_gap_fraction": "0.02",
+      "maximum_tail_loss_fraction": "0.03",
+      "funding_stress_per_bar": "0.00002",
+      "maximum_holding_bars": 42,
+      "minimum_free_collateral_fraction": "0.05",
+      "maximum_leverage": 10,
+      "three_confirmations": "0.5% normal stop-risk budget",
+      "four_confirmations": "1.25% normal stop-risk budget",
+      "tail_stress": "2% gap beyond stop plus round-trip fees and 0.002% adverse funding per 4h bar for 42 bars; combined loss at most 3% equity",
+      "margin": "retain at least 5% free collateral and require the stressed exit to remain before the funding-adjusted liquidation threshold",
+      "selection": "smallest safe integer leverage; automatically reduce size or leverage"
+    },
+    "timing": {
+      "regime": "completed 4h bucket plus one full 4h safety lag",
+      "funding": "four completed hourly values known at signal close",
+      "execution": "next 4h trade candle open",
+      "maximum_holding_bars": 42
+    },
+    "costs": {
+      "fee_rate": "0.0005",
+      "fee_source": "Kraken Derivatives published base taker fee, verified 2026-09-23",
+      "primary": "observed p95 spread/slippage plus actual signed hourly funding",
+      "stress": "double fee, spread, slippage and every signed funding value"
+    },
+    "stages": {
+      "screen": {
+        "blocks": 180,
+        "minimum_trades_each_cost": 6,
+        "profit_factor_minimum": "1.10",
+        "maximum_drawdown": "0.08",
+        "maximum_liquidations": 0
+      },
+      "holdout": {
+        "starts_after_block": 180,
+        "blocks": 360,
+        "total_blocks_required": 540,
+        "minimum_trades_each_cost": 12,
+        "profit_factor_minimum": "1.20",
+        "maximum_drawdown": "0.10",
+        "maximum_liquidations": 0
+      }
+    },
+    "multiple_hypothesis_rule": "This third candidate is judged independently and cannot replace, rescue or be selected against either earlier forward candidate.",
+    "lineage": "Entry and risk tiers match adaptive v2; only the predeclared causal break-even stop policy differs. Adaptive v2 continues unchanged as a separate test.",
+    "activation": "A holdout pass creates a separate long-running PAPER candidate only; LIVE remains off.",
+    "rules": [
+      "Every bundle whose start precedes the cutoff is warm-up only.",
+      "The screen must pass unchanged before the holdout may be read.",
+      "Failure ends this candidate; no parameter adjustment can rescue a stage.",
+      "Both cost cases use a fresh 1000 USD account and the safe replay engine.",
+      "No result from this protocol can enable real orders."
+    ]
+  },
+  "code_sha256": {
+    "app/domain.py": "a1bcc86fbb3fa06e7528d460f0ed63c0d53bb98f0b7ed747a0a579f4a2236d7f",
+    "app/market_data/models.py": "e81c819490a1ef59eb4c050396ddb090a0155066a8092518b84f9f677dbe2b89",
+    "app/market_data/quality.py": "99c62cd7d1dcb41aa7a6ac923feccbbbc879184e617ce575a92575d0acce2b6e",
+    "app/market_data/candles.py": "9b5d64430b2f919a320fe821c63c97fa38ad9b52eefe0ed37b60c051badccbe0",
+    "app/market_data/kraken_futures.py": "5f9bec4914b6388be1ef66bbfd34c1d76d15b6008932e6d5cec4dea7f102736c",
+    "app/market_data/kraken_funding.py": "c5b8cdbfc2b90fd4f1ceacfe9e6e28a988fb731f154d6e72279f318004a0d8dc",
+    "app/market_data/kraken_funding_archive.py": "d23ea654f239625541907bab9e71e05f0dceb9b8324c65025ae1ce29c00d2fee",
+    "app/market_data/kraken_perpetual_regime.py": "0b676311ecc78588eb2f34c459cd068740d1473e32096a24cbf9f5635cf83e00",
+    "app/market_data/kraken_perpetual_regime_history.py": "5912255865abddbc266ab7bd0187726b2a962953eda7f9c94626a0984d6273fb",
+    "app/market_data/perpetual_regime_alignment.py": "55e12468f6c0a7a882278ab1ca7349f0179423ca2edbf452f64fe854e5650ab7",
+    "app/market_data/kraken_perpetual_forward.py": "bfa08000fac8b3369a54f2092846c59fcd963b64090363402cffa890ad92b26f",
+    "app/indicators/core.py": "7b8e98d688cad30f8e7504e60ca1381e917f9bf51c9546cca1010cbe63cd5554",
+    "app/strategies/base.py": "49a21941bb1d4d473bf10cb466c9ba0fc506c230a2c8e1b960cf7b2fdf78e071",
+    "app/strategies/models.py": "8006380a7808fbe15464ad1462afa7e0fbce65d238bcbde265660e94ced727cc",
+    "app/strategies/funding_aware_regime_momentum.py": "3ad5c1a87ea778634e6e25556dbb39dfcc74fc3e060c0e78d265ccf92c0fe10b",
+    "app/strategies/funding_aware_regime_momentum_v2.py": "c9f040a94f792c34e659d79b77c2962ff1c1769b41e8945d7deadaffb1f3d04e",
+    "app/derivatives/models.py": "dc944d70d9af15c36cc1e9a7f5ede21daeae1a910b376b7dd9b833c6c1b6dc9c",
+    "app/derivatives/settings.py": "b5c5abd27186303a7d9fd656386329acdb9b72efe6fe14bc870d4a4c5ae08d56",
+    "app/derivatives/risk.py": "2268310d905c3f517345fc34403a776ffca76e8e1a52f4c524028ae028e9748b",
+    "app/derivatives/broker.py": "5ec4156ea5ea49ac715962f54f8b53a896d78e6f178d35f4e213864d200f9d1a",
+    "app/derivatives/observed_costs.py": "4cba57e029dec8e31ce1cac706df81e6b81acf11d07f6170c8b519f2322bb1bc",
+    "app/derivatives/safety.py": "63e43b68c348cb1c15c8f878d3e3a0a96fb8e1b91e4d2ef3b9e5e0d0b7d3d397",
+    "backtesting/derivatives.py": "863ffb5d18d243b47b8778cbc790bfe05faae5ba51a2f90aea8369ceeaa1dc6c",
+    "backtesting/safe_derivatives_v3.py": "be5baca86258fbf494562b54abe679dba981231d2211ee8c01801d47c68a374d",
+    "backtesting/profit_protection_forward_protocol_v3.py": "406d0bb9128630ff0fabf7c84051bd4c07d9a22d3a61970b7659ea304fa4f05b",
+    "backtesting/profit_protection_forward_research_v3.py": "14bc7ad4f484fbe49ec013f05e2d7b21f39994512732e75a8c51b64e840ca1cd"
+  },
+  "cost_evidence": {
+    "candidate_sha256": "32599bc1c6d137b89863b14cd62f1ce2cb2960f2200a06545cbb3ad7dd0656d7",
+    "summary_sha256": "96996e7246fce45227bd8412bd5176156822a8359bcf8ddd5db3ef6dfff61400",
+    "source_summary_sha256": "96996e7246fce45227bd8412bd5176156822a8359bcf8ddd5db3ef6dfff61400"
+  },
+  "pre_registration_inventory": {
+    "bundles_present_at_freeze": 97,
+    "start": "2026-09-24T08:00:00+00:00",
+    "end": "2026-10-10T12:00:00+00:00",
+    "uncollected_warmup_until": "2026-10-10T16:00:00+00:00",
+    "bundle_manifests": [
+      {
+        "name": "pf_xbtusd_20260924T0800Z_20260924T1200Z",
+        "start": "2026-09-24T08:00:00+00:00",
+        "end": "2026-09-24T12:00:00+00:00",
+        "bundle_sha256": "af0a6e31c9139ce6ecd11d36416134ec99289b5bd1966db35583b6f9eeca440b"
+      },
+      {
+        "name": "pf_xbtusd_20260924T1200Z_20260924T1600Z",
+        "start": "2026-09-24T12:00:00+00:00",
+        "end": "2026-09-24T16:00:00+00:00",
+        "bundle_sha256": "1e3e03d946ae5e014cdeccc37d0d8ae06ff11a5420da7b16719be359ab8c9ab5"
+      },
+      {
+        "name": "pf_xbtusd_20260924T1600Z_20260924T2000Z",
+        "start": "2026-09-24T16:00:00+00:00",
+        "end": "2026-09-24T20:00:00+00:00",
+        "bundle_sha256": "0ee617cd3e1372e57d3afcb8f2211f7ea0d0477335420303e44b949e113e66d5"
+      },
+      {
+        "name": "pf_xbtusd_20260924T2000Z_20260925T0000Z",
+        "start": "2026-09-24T20:00:00+00:00",
+        "end": "2026-09-25T00:00:00+00:00",
+        "bundle_sha256": "beedd69dfe46e7150ce2c74eb24383d9f182ce0fcb3a7e5740c5b08c9eed491b"
+      },
+      {
+        "name": "pf_xbtusd_20260925T0000Z_20260925T0400Z",
+        "start": "2026-09-25T00:00:00+00:00",
+        "end": "2026-09-25T04:00:00+00:00",
+        "bundle_sha256": "4cdef8f912099b5667ac333eeae413c3e6aeaafd29146e4a3085a7f0194dffa7"
+      },
+      {
+        "name": "pf_xbtusd_20260925T0400Z_20260925T0800Z",
+        "start": "2026-09-25T04:00:00+00:00",
+        "end": "2026-09-25T08:00:00+00:00",
+        "bundle_sha256": "8256be688e227e75523877b376b14f2cc19ea8a459c668eefbabbf94d9cace94"
+      },
+      {
+        "name": "pf_xbtusd_20260925T0800Z_20260925T1200Z",
+        "start": "2026-09-25T08:00:00+00:00",
+        "end": "2026-09-25T12:00:00+00:00",
+        "bundle_sha256": "b9d68de0c4d14d48b933d16aca694d640342d4633bae758cad19c2cc13ebe5b7"
+      },
+      {
+        "name": "pf_xbtusd_20260925T1200Z_20260925T1600Z",
+        "start": "2026-09-25T12:00:00+00:00",
+        "end": "2026-09-25T16:00:00+00:00",
+        "bundle_sha256": "638473497a5a827c0d7e0eb8b23f9cea109813c374b30915fa1fc6e113ba8b0c"
+      },
+      {
+        "name": "pf_xbtusd_20260925T1600Z_20260925T2000Z",
+        "start": "2026-09-25T16:00:00+00:00",
+        "end": "2026-09-25T20:00:00+00:00",
+        "bundle_sha256": "d265387c29c7128662f7a8d2be913aed93c694a80767cc8e56ab691cf1d72e72"
+      },
+      {
+        "name": "pf_xbtusd_20260925T2000Z_20260926T0000Z",
+        "start": "2026-09-25T20:00:00+00:00",
+        "end": "2026-09-26T00:00:00+00:00",
+        "bundle_sha256": "0c65422a43b44f9255d3e27d4cac9a26488bbe1b07d7ea5ed893ff10c359dc50"
+      },
+      {
+        "name": "pf_xbtusd_20260926T0000Z_20260926T0400Z",
+        "start": "2026-09-26T00:00:00+00:00",
+        "end": "2026-09-26T04:00:00+00:00",
+        "bundle_sha256": "f2935c7b976d38e097ab0770aedc4a43ff073894947e875ad31a2f8545860cb9"
+      },
+      {
+        "name": "pf_xbtusd_20260926T0400Z_20260926T0800Z",
+        "start": "2026-09-26T04:00:00+00:00",
+        "end": "2026-09-26T08:00:00+00:00",
+        "bundle_sha256": "a13389a6806549ac85e619aec8ed3c90d88bd21ab4dce455da9bffdf753295e5"
+      },
+      {
+        "name": "pf_xbtusd_20260926T0800Z_20260926T1200Z",
+        "start": "2026-09-26T08:00:00+00:00",
+        "end": "2026-09-26T12:00:00+00:00",
+        "bundle_sha256": "b35b4424799e7b2dc1c0b25157ff6388b6ffad5603b04b4474b703ef75c15d81"
+      },
+      {
+        "name": "pf_xbtusd_20260926T1200Z_20260926T1600Z",
+        "start": "2026-09-26T12:00:00+00:00",
+        "end": "2026-09-26T16:00:00+00:00",
+        "bundle_sha256": "7a7f6452d9dd6376e313983ffaf558e28e70ab947f0cd9707ab3899a017009bb"
+      },
+      {
+        "name": "pf_xbtusd_20260926T1600Z_20260926T2000Z",
+        "start": "2026-09-26T16:00:00+00:00",
+        "end": "2026-09-26T20:00:00+00:00",
+        "bundle_sha256": "aea974dd128484dd956be337fe8b59f2775ce2b35f28631dc4b18525867dcda7"
+      },
+      {
+        "name": "pf_xbtusd_20260926T2000Z_20260927T0000Z",
+        "start": "2026-09-26T20:00:00+00:00",
+        "end": "2026-09-27T00:00:00+00:00",
+        "bundle_sha256": "426c85fddaab07ce20479bff49fba4fbc3f365fe54670d600da488a4871939c8"
+      },
+      {
+        "name": "pf_xbtusd_20260927T0000Z_20260927T0400Z",
+        "start": "2026-09-27T00:00:00+00:00",
+        "end": "2026-09-27T04:00:00+00:00",
+        "bundle_sha256": "c9df4f19e79b14d70a0cd0f65d018e1e28895d09c3275cb9e5ae8f749280aa3b"
+      },
+      {
+        "name": "pf_xbtusd_20260927T0400Z_20260927T0800Z",
+        "start": "2026-09-27T04:00:00+00:00",
+        "end": "2026-09-27T08:00:00+00:00",
+        "bundle_sha256": "6e75fdef8c2e1f4368d2f8c2c075e167788385e9218e7e7bda63c6355ba20047"
+      },
+      {
+        "name": "pf_xbtusd_20260927T0800Z_20260927T1200Z",
+        "start": "2026-09-27T08:00:00+00:00",
+        "end": "2026-09-27T12:00:00+00:00",
+        "bundle_sha256": "14c35fb006838db41b0bdc7470969da01e28190e94f1c50b6ed40deffc0d4232"
+      },
+      {
+        "name": "pf_xbtusd_20260927T1200Z_20260927T1600Z",
+        "start": "2026-09-27T12:00:00+00:00",
+        "end": "2026-09-27T16:00:00+00:00",
+        "bundle_sha256": "0a7cfe25ab93e74384c96152223c3a4aeaa5cc65ddcc5e9d39543fd75a16dbc6"
+      },
+      {
+        "name": "pf_xbtusd_20260927T1600Z_20260927T2000Z",
+        "start": "2026-09-27T16:00:00+00:00",
+        "end": "2026-09-27T20:00:00+00:00",
+        "bundle_sha256": "c1bb524702b3f055858bb6b89bc339904c7612d5c0269805c7a5bd73fb78dc64"
+      },
+      {
+        "name": "pf_xbtusd_20260927T2000Z_20260928T0000Z",
+        "start": "2026-09-27T20:00:00+00:00",
+        "end": "2026-09-28T00:00:00+00:00",
+        "bundle_sha256": "54b03d3eb20908b2858e500e1028dee603e158a839db0a285e1dbe40f624b8ff"
+      },
+      {
+        "name": "pf_xbtusd_20260928T0000Z_20260928T0400Z",
+        "start": "2026-09-28T00:00:00+00:00",
+        "end": "2026-09-28T04:00:00+00:00",
+        "bundle_sha256": "5000304dd6ffe10fbf5241832aa18b3a7ba30fb7eac833395500c67c9e7358e7"
+      },
+      {
+        "name": "pf_xbtusd_20260928T0400Z_20260928T0800Z",
+        "start": "2026-09-28T04:00:00+00:00",
+        "end": "2026-09-28T08:00:00+00:00",
+        "bundle_sha256": "a187f922c31d64007187e420c5543363bdc2754f7a2be0beda069472377428d4"
+      },
+      {
+        "name": "pf_xbtusd_20260928T0800Z_20260928T1200Z",
+        "start": "2026-09-28T08:00:00+00:00",
+        "end": "2026-09-28T12:00:00+00:00",
+        "bundle_sha256": "d0f8de3e46579c3a7c11a71986b7de224035d72d087d413c24f1f3dab98c1bf0"
+      },
+      {
+        "name": "pf_xbtusd_20260928T1200Z_20260928T1600Z",
+        "start": "2026-09-28T12:00:00+00:00",
+        "end": "2026-09-28T16:00:00+00:00",
+        "bundle_sha256": "cb9063b901227b2c2b9c58f5691503c7fefc478c8e83e25b9402931fdf5d4cf5"
+      },
+      {
+        "name": "pf_xbtusd_20260928T1600Z_20260928T2000Z",
+        "start": "2026-09-28T16:00:00+00:00",
+        "end": "2026-09-28T20:00:00+00:00",
+        "bundle_sha256": "54ad113f523e596995e2635aaed2d8b6fddeed7883b7bb2d6f1ab09b550fb4fb"
+      },
+      {
+        "name": "pf_xbtusd_20260928T2000Z_20260929T0000Z",
+        "start": "2026-09-28T20:00:00+00:00",
+        "end": "2026-09-29T00:00:00+00:00",
+        "bundle_sha256": "7595c9e5e02c32ccb55fcf63a3599a5adb8f46f43f787ca485e71c3d052c9b34"
+      },
+      {
+        "name": "pf_xbtusd_20260929T0000Z_20260929T0400Z",
+        "start": "2026-09-29T00:00:00+00:00",
+        "end": "2026-09-29T04:00:00+00:00",
+        "bundle_sha256": "0414a0e1b9ea41438cb5f3cf822ed55504d52cd71c2249a28cfae99ee5d789e5"
+      },
+      {
+        "name": "pf_xbtusd_20260929T0400Z_20260929T0800Z",
+        "start": "2026-09-29T04:00:00+00:00",
+        "end": "2026-09-29T08:00:00+00:00",
+        "bundle_sha256": "c24a1ec890c91b7f616a72009a9bf5f1b6c0456e52e8884022ac6ff60c941022"
+      },
+      {
+        "name": "pf_xbtusd_20260929T0800Z_20260929T1200Z",
+        "start": "2026-09-29T08:00:00+00:00",
+        "end": "2026-09-29T12:00:00+00:00",
+        "bundle_sha256": "e93cdda53d3513dbd29cad45f35dd1d53e077f0b8a8e436d253455eac600726e"
+      },
+      {
+        "name": "pf_xbtusd_20260929T1200Z_20260929T1600Z",
+        "start": "2026-09-29T12:00:00+00:00",
+        "end": "2026-09-29T16:00:00+00:00",
+        "bundle_sha256": "dac5a53a1cdeb80629b655a367243b149a8b355f47cd2faa1cfcfdfcf5de87d0"
+      },
+      {
+        "name": "pf_xbtusd_20260929T1600Z_20260929T2000Z",
+        "start": "2026-09-29T16:00:00+00:00",
+        "end": "2026-09-29T20:00:00+00:00",
+        "bundle_sha256": "78ccbee652620c42d515dc99af7ef9a12bedac0e11118eafc28f901fdfcb5ee7"
+      },
+      {
+        "name": "pf_xbtusd_20260929T2000Z_20260930T0000Z",
+        "start": "2026-09-29T20:00:00+00:00",
+        "end": "2026-09-30T00:00:00+00:00",
+        "bundle_sha256": "a0274a5230f61be1fe646cb1902487a0fdb12a2f58e31b5462e95a2d21dacd50"
+      },
+      {
+        "name": "pf_xbtusd_20260930T0000Z_20260930T0400Z",
+        "start": "2026-09-30T00:00:00+00:00",
+        "end": "2026-09-30T04:00:00+00:00",
+        "bundle_sha256": "09e114bb393951e34755cd4476e218488ee2bfa804940c8f25a550b82274f37e"
+      },
+      {
+        "name": "pf_xbtusd_20260930T0400Z_20260930T0800Z",
+        "start": "2026-09-30T04:00:00+00:00",
+        "end": "2026-09-30T08:00:00+00:00",
+        "bundle_sha256": "aed1fba09dec549ecb42af3ba6e10b100a0e96997ea079340d50d8104dd20d44"
+      },
+      {
+        "name": "pf_xbtusd_20260930T0800Z_20260930T1200Z",
+        "start": "2026-09-30T08:00:00+00:00",
+        "end": "2026-09-30T12:00:00+00:00",
+        "bundle_sha256": "06acde404935d5c79f2bffd6553190a21b4c18db8628b97f67844b66bf38b7bd"
+      },
+      {
+        "name": "pf_xbtusd_20260930T1200Z_20260930T1600Z",
+        "start": "2026-09-30T12:00:00+00:00",
+        "end": "2026-09-30T16:00:00+00:00",
+        "bundle_sha256": "f92f9a71155c3a1b60f3cc561f98f5ecc6368446bcef21c8c565445db2076c15"
+      },
+      {
+        "name": "pf_xbtusd_20260930T1600Z_20260930T2000Z",
+        "start": "2026-09-30T16:00:00+00:00",
+        "end": "2026-09-30T20:00:00+00:00",
+        "bundle_sha256": "80939b492c78aec668afaf808c9e06169d8f868442823f60ddae4964ef8db318"
+      },
+      {
+        "name": "pf_xbtusd_20260930T2000Z_20261001T0000Z",
+        "start": "2026-09-30T20:00:00+00:00",
+        "end": "2026-10-01T00:00:00+00:00",
+        "bundle_sha256": "972ca90aa3668733b3be29c8348d62deb98981f4cb22c94ce0a96e90577fe639"
+      },
+      {
+        "name": "pf_xbtusd_20261001T0000Z_20261001T0400Z",
+        "start": "2026-10-01T00:00:00+00:00",
+        "end": "2026-10-01T04:00:00+00:00",
+        "bundle_sha256": "b4b47b167da0890e9f3811e3cf82121ec83c6cd0c14f43c1aec2244a94a83ccb"
+      },
+      {
+        "name": "pf_xbtusd_20261001T0400Z_20261001T0800Z",
+        "start": "2026-10-01T04:00:00+00:00",
+        "end": "2026-10-01T08:00:00+00:00",
+        "bundle_sha256": "fde96e59f7f3569b0d2f4213454be829107abbb9b066936e7a81140bd8ed5e5d"
+      },
+      {
+        "name": "pf_xbtusd_20261001T0800Z_20261001T1200Z",
+        "start": "2026-10-01T08:00:00+00:00",
+        "end": "2026-10-01T12:00:00+00:00",
+        "bundle_sha256": "ebce675a10b116aee94c3a344162215fd2b837cce2ca7cac530068a1c70c859c"
+      },
+      {
+        "name": "pf_xbtusd_20261001T1200Z_20261001T1600Z",
+        "start": "2026-10-01T12:00:00+00:00",
+        "end": "2026-10-01T16:00:00+00:00",
+        "bundle_sha256": "8004cfd7721239c7bc7df980bf652f3c74ca515482aecc42ea35211227469b95"
+      },
+      {
+        "name": "pf_xbtusd_20261001T1600Z_20261001T2000Z",
+        "start": "2026-10-01T16:00:00+00:00",
+        "end": "2026-10-01T20:00:00+00:00",
+        "bundle_sha256": "57605356ab14e8f51d9ef3b2d9c5e84e28c341d19b1b2f16f899a9c73fedbafd"
+      },
+      {
+        "name": "pf_xbtusd_20261001T2000Z_20261002T0000Z",
+        "start": "2026-10-01T20:00:00+00:00",
+        "end": "2026-10-02T00:00:00+00:00",
+        "bundle_sha256": "879ba98f5c7c009e628ddf7f355e1553d4d6c746564dd988b4bff34f4607ef30"
+      },
+      {
+        "name": "pf_xbtusd_20261002T0000Z_20261002T0400Z",
+        "start": "2026-10-02T00:00:00+00:00",
+        "end": "2026-10-02T04:00:00+00:00",
+        "bundle_sha256": "9e812a13e80140b4bd61555383efcb0b0b415d6cf0ab27302118c1dc3e2fa028"
+      },
+      {
+        "name": "pf_xbtusd_20261002T0400Z_20261002T0800Z",
+        "start": "2026-10-02T04:00:00+00:00",
+        "end": "2026-10-02T08:00:00+00:00",
+        "bundle_sha256": "0f20854b5095f550f4297d62653c0eb6e977e91a3e01e573602992f878e8a41e"
+      },
+      {
+        "name": "pf_xbtusd_20261002T0800Z_20261002T1200Z",
+        "start": "2026-10-02T08:00:00+00:00",
+        "end": "2026-10-02T12:00:00+00:00",
+        "bundle_sha256": "a3790a3f12617bc67658c3af32292aa0160e4f5aaf297016be8a220b89a3edfa"
+      },
+      {
+        "name": "pf_xbtusd_20261002T1200Z_20261002T1600Z",
+        "start": "2026-10-02T12:00:00+00:00",
+        "end": "2026-10-02T16:00:00+00:00",
+        "bundle_sha256": "67f5987b246b1aa762ea2074390009bcfc4373300fadcf13e7be642a85ca0077"
+      },
+      {
+        "name": "pf_xbtusd_20261002T1600Z_20261002T2000Z",
+        "start": "2026-10-02T16:00:00+00:00",
+        "end": "2026-10-02T20:00:00+00:00",
+        "bundle_sha256": "b306334ba9305a83aaf1e238a286b24f41c58e569b8769a5b3968a34297607dc"
+      },
+      {
+        "name": "pf_xbtusd_20261002T2000Z_20261003T0000Z",
+        "start": "2026-10-02T20:00:00+00:00",
+        "end": "2026-10-03T00:00:00+00:00",
+        "bundle_sha256": "82553998fd6069785fc8899af4a15c4317a919faddbd18b6220388f5620de0d4"
+      },
+      {
+        "name": "pf_xbtusd_20261003T0000Z_20261003T0400Z",
+        "start": "2026-10-03T00:00:00+00:00",
+        "end": "2026-10-03T04:00:00+00:00",
+        "bundle_sha256": "cdd8ba431912feb8db8817bbabbbaca2c1133e5ddb26c2dc25fce0fc7d62910c"
+      },
+      {
+        "name": "pf_xbtusd_20261003T0400Z_20261003T0800Z",
+        "start": "2026-10-03T04:00:00+00:00",
+        "end": "2026-10-03T08:00:00+00:00",
+        "bundle_sha256": "60efc1d906b1ffa5473cec497decdb1f0cf16b7b484b94798349b35d3313535b"
+      },
+      {
+        "name": "pf_xbtusd_20261003T0800Z_20261003T1200Z",
+        "start": "2026-10-03T08:00:00+00:00",
+        "end": "2026-10-03T12:00:00+00:00",
+        "bundle_sha256": "0acf599fd512e78c4046bffa9d409b45254faebea5bd3a3ad426b36f841e2a0a"
+      },
+      {
+        "name": "pf_xbtusd_20261003T1200Z_20261003T1600Z",
+        "start": "2026-10-03T12:00:00+00:00",
+        "end": "2026-10-03T16:00:00+00:00",
+        "bundle_sha256": "db564c4f8718ab87568d1143acb2e7dc5800f26ec08023ddf7742556e006aa16"
+      },
+      {
+        "name": "pf_xbtusd_20261003T1600Z_20261003T2000Z",
+        "start": "2026-10-03T16:00:00+00:00",
+        "end": "2026-10-03T20:00:00+00:00",
+        "bundle_sha256": "9408f4506ce6a4353b693d62c4f98aaa1ce81b9c5c6a9a29261d3b89d07799c0"
+      },
+      {
+        "name": "pf_xbtusd_20261003T2000Z_20261004T0000Z",
+        "start": "2026-10-03T20:00:00+00:00",
+        "end": "2026-10-04T00:00:00+00:00",
+        "bundle_sha256": "a8c454497114bb0dcb7272a9570b4616eeeb9933d94126b9d488b7e763af8e5e"
+      },
+      {
+        "name": "pf_xbtusd_20261004T0000Z_20261004T0400Z",
+        "start": "2026-10-04T00:00:00+00:00",
+        "end": "2026-10-04T04:00:00+00:00",
+        "bundle_sha256": "94549aeb13331bf3f1f9f99671104494e184614f98bf5d2c0804d87236b7c21b"
+      },
+      {
+        "name": "pf_xbtusd_20261004T0400Z_20261004T0800Z",
+        "start": "2026-10-04T04:00:00+00:00",
+        "end": "2026-10-04T08:00:00+00:00",
+        "bundle_sha256": "092ebefdf53a1b093bff33ef6916a4e28f79a1df4ee8ac5811ed7c3634e016d6"
+      },
+      {
+        "name": "pf_xbtusd_20261004T0800Z_20261004T1200Z",
+        "start": "2026-10-04T08:00:00+00:00",
+        "end": "2026-10-04T12:00:00+00:00",
+        "bundle_sha256": "37429039e9798a4c76cea9d01044fd1a30148ee5090c5354afa2724afc5ecf6d"
+      },
+      {
+        "name": "pf_xbtusd_20261004T1200Z_20261004T1600Z",
+        "start": "2026-10-04T12:00:00+00:00",
+        "end": "2026-10-04T16:00:00+00:00",
+        "bundle_sha256": "83b7c10f41b83da90aadaafa74d69cdd906d9baf9770959b96f50eaf44e80cbb"
+      },
+      {
+        "name": "pf_xbtusd_20261004T1600Z_20261004T2000Z",
+        "start": "2026-10-04T16:00:00+00:00",
+        "end": "2026-10-04T20:00:00+00:00",
+        "bundle_sha256": "da4b429886c84dfd6fb7042c54b33134b0d35062d2d2c875902c9a341a4eb31f"
+      },
+      {
+        "name": "pf_xbtusd_20261004T2000Z_20261005T0000Z",
+        "start": "2026-10-04T20:00:00+00:00",
+        "end": "2026-10-05T00:00:00+00:00",
+        "bundle_sha256": "b7aac36233c186b604d4229b717ae2a2d862196f11a58220af6af671232aaa48"
+      },
+      {
+        "name": "pf_xbtusd_20261005T0000Z_20261005T0400Z",
+        "start": "2026-10-05T00:00:00+00:00",
+        "end": "2026-10-05T04:00:00+00:00",
+        "bundle_sha256": "47690bf4b43a674bc39a9f970b33b3b756f5f26dab59463390b60dd56a10926d"
+      },
+      {
+        "name": "pf_xbtusd_20261005T0400Z_20261005T0800Z",
+        "start": "2026-10-05T04:00:00+00:00",
+        "end": "2026-10-05T08:00:00+00:00",
+        "bundle_sha256": "7f724d1d04bc4cf8fc4367276a055421cee69d1a7c699ce6653ae3de37651b3a"
+      },
+      {
+        "name": "pf_xbtusd_20261005T0800Z_20261005T1200Z",
+        "start": "2026-10-05T08:00:00+00:00",
+        "end": "2026-10-05T12:00:00+00:00",
+        "bundle_sha256": "4fdf4df3f44165dd86f88033ea0f63255f13f7f6021469507d096d3e583b26c5"
+      },
+      {
+        "name": "pf_xbtusd_20261005T1200Z_20261005T1600Z",
+        "start": "2026-10-05T12:00:00+00:00",
+        "end": "2026-10-05T16:00:00+00:00",
+        "bundle_sha256": "1d5dcf5999cde992279e0863736a544a5967dab354263e1fc19c0049449084fa"
+      },
+      {
+        "name": "pf_xbtusd_20261005T1600Z_20261005T2000Z",
+        "start": "2026-10-05T16:00:00+00:00",
+        "end": "2026-10-05T20:00:00+00:00",
+        "bundle_sha256": "7a60101ec878af13727a2b0dfbb883e7e0aa0ed4c637818c11171bd8f5659b4e"
+      },
+      {
+        "name": "pf_xbtusd_20261005T2000Z_20261006T0000Z",
+        "start": "2026-10-05T20:00:00+00:00",
+        "end": "2026-10-06T00:00:00+00:00",
+        "bundle_sha256": "26c988ae3a61d753de23a4050005314b25cc26bf62413c4ebbfb87bb8e2caf62"
+      },
+      {
+        "name": "pf_xbtusd_20261006T0000Z_20261006T0400Z",
+        "start": "2026-10-06T00:00:00+00:00",
+        "end": "2026-10-06T04:00:00+00:00",
+        "bundle_sha256": "032eac05c462061f8d18d5f71c102d199de80d878a3e80d62dcb6fa58790a595"
+      },
+      {
+        "name": "pf_xbtusd_20261006T0400Z_20261006T0800Z",
+        "start": "2026-10-06T04:00:00+00:00",
+        "end": "2026-10-06T08:00:00+00:00",
+        "bundle_sha256": "91c32b6304df7cb799450cfe14af34fdc6118832134e1750555f62bafcc0c5f6"
+      },
+      {
+        "name": "pf_xbtusd_20261006T0800Z_20261006T1200Z",
+        "start": "2026-10-06T08:00:00+00:00",
+        "end": "2026-10-06T12:00:00+00:00",
+        "bundle_sha256": "4f3e784290dc91cdf50860c178188371d87e50711285db2e883ee0f431c013d4"
+      },
+      {
+        "name": "pf_xbtusd_20261006T1200Z_20261006T1600Z",
+        "start": "2026-10-06T12:00:00+00:00",
+        "end": "2026-10-06T16:00:00+00:00",
+        "bundle_sha256": "8c8535307bbba9089ed64affa664924c147a3b161227e70d47b8a65362fa419a"
+      },
+      {
+        "name": "pf_xbtusd_20261006T1600Z_20261006T2000Z",
+        "start": "2026-10-06T16:00:00+00:00",
+        "end": "2026-10-06T20:00:00+00:00",
+        "bundle_sha256": "3de60b54229e716b8f4f36997bde7734801e54f11af647ff9b3e3490487c3884"
+      },
+      {
+        "name": "pf_xbtusd_20261006T2000Z_20261007T0000Z",
+        "start": "2026-10-06T20:00:00+00:00",
+        "end": "2026-10-07T00:00:00+00:00",
+        "bundle_sha256": "c96354c1608399afea07ced71a0a59b6272a876dd3a208544baa806aa8011c5a"
+      },
+      {
+        "name": "pf_xbtusd_20261007T0000Z_20261007T0400Z",
+        "start": "2026-10-07T00:00:00+00:00",
+        "end": "2026-10-07T04:00:00+00:00",
+        "bundle_sha256": "da0eec4aea576f1c48bd4c56da9cd62acb6def18a251b73a40e295fbd65a6172"
+      },
+      {
+        "name": "pf_xbtusd_20261007T0400Z_20261007T0800Z",
+        "start": "2026-10-07T04:00:00+00:00",
+        "end": "2026-10-07T08:00:00+00:00",
+        "bundle_sha256": "25261f721ac8921874fe26d899e9e91c13885b831b6a983db6ca60d17a6bc597"
+      },
+      {
+        "name": "pf_xbtusd_20261007T0800Z_20261007T1200Z",
+        "start": "2026-10-07T08:00:00+00:00",
+        "end": "2026-10-07T12:00:00+00:00",
+        "bundle_sha256": "0b3826d05b822ab6717d811466e549bfae6a5007d81144023edd899b96168e41"
+      },
+      {
+        "name": "pf_xbtusd_20261007T1200Z_20261007T1600Z",
+        "start": "2026-10-07T12:00:00+00:00",
+        "end": "2026-10-07T16:00:00+00:00",
+        "bundle_sha256": "8710b69d960de4074a5d1c48ccd8f5bd0fd995556a54d7d70a7c68b2597bf6ee"
+      },
+      {
+        "name": "pf_xbtusd_20261007T1600Z_20261007T2000Z",
+        "start": "2026-10-07T16:00:00+00:00",
+        "end": "2026-10-07T20:00:00+00:00",
+        "bundle_sha256": "51b4499e917def055b104e408cf0cb2855e97a5934187191c6db4914012950f1"
+      },
+      {
+        "name": "pf_xbtusd_20261007T2000Z_20261008T0000Z",
+        "start": "2026-10-07T20:00:00+00:00",
+        "end": "2026-10-08T00:00:00+00:00",
+        "bundle_sha256": "364ca67664b955b06112298b9cb17f40bad6d0026a905e0340ebd70ad3f0f764"
+      },
+      {
+        "name": "pf_xbtusd_20261008T0000Z_20261008T0400Z",
+        "start": "2026-10-08T00:00:00+00:00",
+        "end": "2026-10-08T04:00:00+00:00",
+        "bundle_sha256": "8b5a9e156c1d5afe970c3d6c37e120d2d87d60a1752a1e4d52269d390fb9df84"
+      },
+      {
+        "name": "pf_xbtusd_20261008T0400Z_20261008T0800Z",
+        "start": "2026-10-08T04:00:00+00:00",
+        "end": "2026-10-08T08:00:00+00:00",
+        "bundle_sha256": "cf37c36f6e2d4fb91e3572a9e278934cdb455a1d09e1413612a90b5b1091489b"
+      },
+      {
+        "name": "pf_xbtusd_20261008T0800Z_20261008T1200Z",
+        "start": "2026-10-08T08:00:00+00:00",
+        "end": "2026-10-08T12:00:00+00:00",
+        "bundle_sha256": "ca3b26e708b83204269e728ed829b826d3c76833c1de4dcdcfd57c25aaf94678"
+      },
+      {
+        "name": "pf_xbtusd_20261008T1200Z_20261008T1600Z",
+        "start": "2026-10-08T12:00:00+00:00",
+        "end": "2026-10-08T16:00:00+00:00",
+        "bundle_sha256": "89f8af8cc19b93c8f09ea01bb51f5f4b64d939dd21f274712d9869d6f0ec7e21"
+      },
+      {
+        "name": "pf_xbtusd_20261008T1600Z_20261008T2000Z",
+        "start": "2026-10-08T16:00:00+00:00",
+        "end": "2026-10-08T20:00:00+00:00",
+        "bundle_sha256": "47ef95a7909b818b23e0c1e48f957a685a60c91cb5c868d39105b159bbdfad9d"
+      },
+      {
+        "name": "pf_xbtusd_20261008T2000Z_20261009T0000Z",
+        "start": "2026-10-08T20:00:00+00:00",
+        "end": "2026-10-09T00:00:00+00:00",
+        "bundle_sha256": "9174b816494f429acb0dc34bdb21ec5fd17b2ad1a26df390cb99d3b0e4380162"
+      },
+      {
+        "name": "pf_xbtusd_20261009T0000Z_20261009T0400Z",
+        "start": "2026-10-09T00:00:00+00:00",
+        "end": "2026-10-09T04:00:00+00:00",
+        "bundle_sha256": "fbb4ca1341e30ddd325074c0290c954f365ffc8020df66603a0010d6c8741185"
+      },
+      {
+        "name": "pf_xbtusd_20261009T0400Z_20261009T0800Z",
+        "start": "2026-10-09T04:00:00+00:00",
+        "end": "2026-10-09T08:00:00+00:00",
+        "bundle_sha256": "bb4b184be52ba1bf4de204d48be628e1c65809d99c9f371505f368001c45b7a6"
+      },
+      {
+        "name": "pf_xbtusd_20261009T0800Z_20261009T1200Z",
+        "start": "2026-10-09T08:00:00+00:00",
+        "end": "2026-10-09T12:00:00+00:00",
+        "bundle_sha256": "d352227fa3526ade36acad49ad473cee6fd556f79992ce96279b96dfcc361d3c"
+      },
+      {
+        "name": "pf_xbtusd_20261009T1200Z_20261009T1600Z",
+        "start": "2026-10-09T12:00:00+00:00",
+        "end": "2026-10-09T16:00:00+00:00",
+        "bundle_sha256": "ecb70e38d4f9cf98af010dbc2cc9817a06e5aea2986936fc7a9c6ab7d5a67c3b"
+      },
+      {
+        "name": "pf_xbtusd_20261009T1600Z_20261009T2000Z",
+        "start": "2026-10-09T16:00:00+00:00",
+        "end": "2026-10-09T20:00:00+00:00",
+        "bundle_sha256": "b42e7decc89d59decbe9b4578df931515252dd7ce43b4f0998afb2128520bddb"
+      },
+      {
+        "name": "pf_xbtusd_20261009T2000Z_20261010T0000Z",
+        "start": "2026-10-09T20:00:00+00:00",
+        "end": "2026-10-10T00:00:00+00:00",
+        "bundle_sha256": "59c6bb3ad6c2839a0ee4dd6d2ccf55e175c1083a29bfdeebbed2717262c00ba0"
+      },
+      {
+        "name": "pf_xbtusd_20261010T0000Z_20261010T0400Z",
+        "start": "2026-10-10T00:00:00+00:00",
+        "end": "2026-10-10T04:00:00+00:00",
+        "bundle_sha256": "c79cdb7e7df9212435cfe94066160761c96fa75b70cd7bbea7aaa47e33ddd208"
+      },
+      {
+        "name": "pf_xbtusd_20261010T0400Z_20261010T0800Z",
+        "start": "2026-10-10T04:00:00+00:00",
+        "end": "2026-10-10T08:00:00+00:00",
+        "bundle_sha256": "2e9afcd820bdd3bdfd1d0852148801f880fae756d5552fa66ab66c372dd5ed02"
+      },
+      {
+        "name": "pf_xbtusd_20261010T0800Z_20261010T1200Z",
+        "start": "2026-10-10T08:00:00+00:00",
+        "end": "2026-10-10T12:00:00+00:00",
+        "bundle_sha256": "2ea02b4c38405d15f123966e8cc5320bccc062dee75f148385394b155b4ba5a9"
+      }
+    ]
+  },
+  "activation": {
+    "paper_enabled": false,
+    "live_enabled": false
+  }
+}

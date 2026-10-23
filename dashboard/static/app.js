@@ -104,6 +104,9 @@ async function loadReadiness() {
     const adaptive = report.gates.adaptive_candidate || {};
     text("readiness-adaptive", adaptive.required == null ? "—" : `${number.format(adaptive.collected || 0)} / ${number.format(adaptive.required)}`);
     text("readiness-adaptive-note", adaptive.verified ? "Getrennt eingefroren · 0,5 % / 1,25 % Risiko" : "Protokoll nicht bestätigt");
+    const protection = report.gates.profit_protection_candidate || {};
+    text("readiness-protection", protection.required == null ? "—" : `${number.format(protection.collected || 0)} / ${number.format(protection.required)}`);
+    text("readiness-protection-note", protection.verified ? "+1R erreicht · Stop ab Folgekerze auf Einstieg" : "Protokoll nicht bestätigt");
     const technical = report.gates.technical_qualification || {};
     text("readiness-technical", technical.verified ? "Bestanden" : "Offen");
     text("readiness-technical-note", technical.verified ? "1x–10x · Funding · Tiefe · Neustart · LIVE-Sperre" : "Qualifikationsnachweis fehlt");

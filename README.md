@@ -247,6 +247,11 @@ Ein separater technischer Qualifikationslauf bindet die getesteten LONG-/SHORT-
 Lebenszyklen von 1x bis 10x, Funding-Liquidation, Kurslücken-Enthebelung,
 Ablehnung bei fehlender Markttiefe, Wiederaufnahme und LIVE-Sperre an die
 Prüfsummen der sicherheitsrelevanten Quelldateien.
+Ein dritter, getrennt bewerteter
+[Zukunftstest mit Gewinnschutz](docs/profit-protection-forward-2026-10-10.md)
+prüft seit dem 10.10.2026, ob ein erst ab der Folgekerze aktiver
+Break-even-Stop nach einem bestätigten Gewinn von 1R profitable Bewegungen
+besser bewahrt.
 
 ## Historische Kraken-Daten
 
@@ -292,8 +297,10 @@ rückwärts erweitern.
   Es gibt keinen Konfigurationsschalter, der echte Orders freischaltet.
 - Öffentliche Datenläufe benötigen keine API-Zugangsdaten. Ein separater
   [nur-lesender Kraken-Derivate-Client](docs/kraken-futures-readonly.md) kann
-  später Kontorechte und Kontostand prüfen, akzeptiert ausschließlich
+  Kontorechte und Kontostand prüfen, akzeptiert ausschließlich
   `READ_ONLY`/`NO_ACCESS` und besitzt keine Order- oder Transferfunktion.
+  Die einmalige Prüfung kann mit `trading-kraken-readonly verify-interactive`
+  erfolgen; beide Eingaben bleiben verdeckt und werden nicht gespeichert.
 - Keine Zugangsdaten im Code, in Logs oder Git. `.env`, lokale Datenbanken und
   Logs sind ausgeschlossen. Spätere Secrets ausschließlich über Environment/.env.
 - Es werden keine Schlüssel erzeugt und keine Withdrawal-Rechte benötigt.

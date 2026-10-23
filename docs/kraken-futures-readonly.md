@@ -1,6 +1,6 @@
 # Nur-lesende Kraken-Derivate-Prüfung
 
-Stand: 04.10.2026. Dieser Baustein prüft später die konkrete Kontoberechtigung,
+Stand: 23.10.2026. Dieser Baustein prüft die konkrete Kontoberechtigung,
 Wallets, offenen Positionen und bisherigen Ausführungen. Er kann keine Order
 erstellen, ändern oder löschen, kein Geld übertragen und keine
 Hebeleinstellung verändern.
@@ -44,8 +44,34 @@ Ohne Zugangsdaten erfolgt kein Netzaufruf:
 .venv/bin/python -m app.exchange.kraken_futures_readonly status
 ```
 
-Für eine spätere einmalige Kontoprüfung müssen die beiden Variablen nur im
-aktuellen Prozess vorhanden sein:
+## Kraken Pro einmalig vorbereiten
+
+1. Im persönlichen Kraken-Konto den Derivatezugang vollständig abschließen. Für
+   Kunden im EWR gehören dazu die Steuerangaben, TIN und Kundenklassifizierung.
+2. Im Derivatekonto oben rechts den Namen öffnen, **Settings** wählen und im
+   API-Bereich **Create Key** öffnen.
+3. Einen eigenen Schlüssel nur für diese Prüfung anlegen: **General API = Read
+   Only** und **Withdrawal API = No Access**.
+4. Public und Private Key in einem Passwortmanager sichern. Das Private Key wird
+   laut Kraken nur einmal angezeigt. Es gehört niemals in den Chat, in Git oder
+   in eine unverschlüsselte Projektdatei.
+5. Danach die folgende interaktive Prüfung im lokalen Projekt ausführen.
+
+Die Schritte und Rechte entsprechen Krakens offizieller Anleitung für
+[Derivate-API-Schlüssel](https://support.kraken.com/hc/articles/360022839451-how-to-create-an-api-key-for-kraken-derivatives).
+Die EWR-Klassifizierung beschreibt Kraken unter
+[How does classification work?](https://support.kraken.com/in/articles/how-does-classification-work).
+
+Am einfachsten erfolgt die einmalige Kontoprüfung interaktiv. Beide Eingaben
+bleiben im Arbeitsspeicher, werden im Terminal nicht angezeigt und nach Ende des
+Prozesses verworfen:
+
+```bash
+.venv/bin/python -m app.exchange.kraken_futures_readonly verify-interactive \
+  --output data/evidence/kraken-readonly/account-summary.json
+```
+
+Alternativ können die beiden Variablen nur im aktuellen Prozess vorhanden sein:
 
 - `KRAKEN_FUTURES_API_KEY`
 - `KRAKEN_FUTURES_API_SECRET`
@@ -60,4 +86,11 @@ Die Ausgabe enthält nur die bestätigten Rechte, Anzahlen von Konten, Positione
 und Ausführungen sowie Zugänglichkeit, Mindestgröße und Einschränkungsstatus von
 `PF_XBTUSD`. Sie enthält keine Schlüssel und keine Guthaben.
 Aktuell sind keine Zugangsdaten eingerichtet; deshalb ist die technische
-Anbindung fertig, aber die persönliche Kraken-Berechtigung noch nicht bestätigt.
+Nur-Lese-Anbindung fertig, aber die persönliche Kraken-Berechtigung noch nicht
+bestätigt. Für den Schlüssel sind ausschließlich **General READ_ONLY** und
+**Transfer NO_ACCESS** zulässig. Ein Schlüssel mit Order- oder Transferrechten
+wird vor dem Lesen des Kontos abgewiesen.
+
+Ein späterer Handelsschlüssel wäre ein zweiter, getrennt erzeugter Schlüssel.
+Er wird erst nach bestandenem Forward-Screen, unabhängigem Holdout und längerem
+Shadow-PAPER-Lauf ergänzt. Auszahlungsrechte bleiben auch dann ausgeschlossen.
