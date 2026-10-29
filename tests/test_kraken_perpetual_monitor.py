@@ -78,6 +78,24 @@ class KrakenPerpetualAnalyticsTests(unittest.TestCase):
         with self.assertRaisesRegex(MarketDataError, "inconsistent"):
             KrakenPerpetualAnalyticsAdapter(favourable, lambda: self.now).snapshot()
 
+    def test_clamps_only_negligible_favourable_chart_rounding(self):
+        def rounded(url):
+            kind = urlsplit(url).path.rsplit("/", 1)[-1]
+            end = int(parse_qs(urlsplit(url).query)["to"][0])
+            raw = payload(kind, end - 60)
+            if kind == "slippage":
+                row = json.loads(raw)
+                row["result"]["data"]["bid"]["slippage_1k"] = ["100.0001"]
+                row["result"]["data"]["ask"]["slippage_1k"] = ["100.9999"]
+                return json.dumps(row).encode()
+            return raw
+
+        snapshot = KrakenPerpetualAnalyticsAdapter(rounded, lambda: self.now).snapshot()
+        self.assertEqual(snapshot.execution_prices["sell_1k"], Decimal("100"))
+        self.assertEqual(snapshot.execution_prices["buy_1k"], Decimal("101"))
+        self.assertEqual(snapshot.slippage_bps["sell_1k"], Decimal("0"))
+        self.assertEqual(snapshot.slippage_bps["buy_1k"], Decimal("0"))
+
     def test_public_transport_rejects_unapproved_url_before_network(self):
         with self.assertRaises(MarketDataError):
             public_get("https://example.com/api/charts/v1/analytics/PF_XBTUSD/spreads?since=1&to=61&interval=60")

@@ -19,6 +19,7 @@ KINDS = ("spreads", "slippage", "funding")
 NOTIONALS = ("1k", "10k", "100k", "1m")
 MAX_RESPONSE_BYTES = 2_000_000
 MAX_LOOKBACK_SECONDS = 3600
+MAX_FAVOURABLE_ROUNDING_BPS = Decimal("0.02")
 
 
 class _NoRedirect(HTTPRedirectHandler):
@@ -147,6 +148,19 @@ def _series(section: dict, key: str, length: int, *, optional: bool = False) -> 
         raise MarketDataError("Malformed Kraken analytics series") from None
 
 
+def _clamp_rounding_noise(price: Decimal | None, reference: Decimal, *, buy: bool) -> Decimal | None:
+    """Remove tiny favourable chart-rounding artefacts without admitting negative cost."""
+    if price is None:
+        return None
+    favourable = reference - price if buy else price - reference
+    if favourable <= 0:
+        return price
+    favourable_bps = favourable / reference * Decimal("10000")
+    if favourable_bps > MAX_FAVOURABLE_ROUNDING_BPS:
+        raise ValueError("Favourable price exceeds chart-rounding tolerance")
+    return reference
+
+
 class KrakenPerpetualAnalyticsAdapter:
     """One coherent, recent public market-cost snapshot for PF_XBTUSD."""
 
@@ -204,8 +218,8 @@ class KrakenPerpetualAnalyticsAdapter:
                     execution[f"{label}_{notional}"] = values[indices[1]]
             for notional in NOTIONALS:
                 sell, buy = execution[f"sell_{notional}"], execution[f"buy_{notional}"]
-                if (sell is not None and sell > bid) or (buy is not None and buy < ask):
-                    raise ValueError("Favourable price mislabeled as adverse slippage")
+                execution[f"sell_{notional}"] = _clamp_rounding_noise(sell, bid, buy=False)
+                execution[f"buy_{notional}"] = _clamp_rounding_noise(buy, ask, buy=True)
 
             relative_rows = funding_data["relativeRate"]
             rate_rows = funding_data["rate"]

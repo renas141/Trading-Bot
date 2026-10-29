@@ -1,3 +1,4 @@
+import hashlib
 import json
 import tempfile
 import unittest
@@ -12,6 +13,8 @@ from app.derivatives.qualification import (
 from app.readiness import (
     FORWARD_START,
     ReadinessPaths,
+    _paper_status,
+    _stage,
     build_readiness,
     validate_report,
     write_report,
@@ -95,6 +98,40 @@ class ReadinessTests(unittest.TestCase):
     def test_live_or_incomplete_report_is_rejected(self):
         with self.assertRaises(ValueError):
             validate_report({"schema_version": 1, "market": "PF_XBTUSD", "live_enabled": True})
+
+    def test_generic_candidate_stage_requires_hash_bound_receipt(self):
+        stage = self.protocol.parent / "screen"
+        stage.mkdir()
+        results = {
+            "protocol_sha256": hashlib.sha256(self.protocol.read_bytes()).hexdigest(),
+            "stage": "screen",
+            "activation": {"paper_enabled": False, "live_enabled": False},
+            "assessment": {"passed": True},
+        }
+        results_path = stage / "results.json"
+        results_path.write_text(json.dumps(results))
+        (stage / "completion.json").write_text(json.dumps({
+            "results_sha256": hashlib.sha256(results_path.read_bytes()).hexdigest(),
+        }))
+        self.assertEqual(_stage(self.protocol, "screen"), {
+            "status": "passed", "passed": True,
+        })
+        results["assessment"]["passed"] = False
+        results_path.write_text(json.dumps(results))
+        with self.assertRaisesRegex(ValueError, "receipt"):
+            _stage(self.protocol, "screen")
+
+    def test_paused_paper_with_unrecovered_error_is_not_healthy(self):
+        status_path = self.paper / "pf_xbtusd_realtime_observer" / "status.json"
+        value = json.loads(status_path.read_text())
+        value.update({
+            "last_error": "MarketDataError: rejected snapshot",
+            "consecutive_errors": 1,
+        })
+        status_path.write_text(json.dumps(value))
+        status = _paper_status(self.paper)
+        self.assertEqual(status["status"], "paused")
+        self.assertFalse(status["healthy"])
 
     def test_redacted_account_evidence_confirms_eligibility_without_credentials(self):
         manifests = self._make_bundles()

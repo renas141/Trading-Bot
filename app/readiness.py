@@ -134,7 +134,11 @@ def _paper_status(root: Path) -> dict:
                 or value.get("market") != "PF_XBTUSD"
                 or value.get("live_enabled") is not False):
             raise ValueError("PAPER status is invalid")
-        healthy = value.get("status") not in {"degraded", "failed"}
+        healthy = (
+            value.get("status") not in {"degraded", "failed"}
+            and int(value.get("consecutive_errors", 0)) == 0
+            and value.get("last_error") in {None, ""}
+        )
         observed = int(value.get("quote_events", value.get("processed_blocks", 0)))
         return {
             "status": value.get("status"), "healthy": healthy,
@@ -199,8 +203,15 @@ def _adaptive_candidate(
             if previous[1] != current[0]:
                 raise ValueError("Adaptive forward evidence has a gap")
     collected = min(len(rows), ADAPTIVE_SCREEN_BLOCKS)
+    screen = _stage(paths.adaptive_protocol, "screen")
+    status = (
+        "collecting_forward_screen" if collected < ADAPTIVE_SCREEN_BLOCKS
+        else "screen_ready_for_evaluation" if screen["status"] == "not_evaluated"
+        else "screen_passed" if screen["passed"]
+        else "hypothesis_failed"
+    )
     return {
-        "status": "collecting_forward_screen",
+        "status": status,
         "verified": protocol["protocol_version"]
         == "pf-xbtusd-adaptive-funding-forward-v2",
         "forward_start": ADAPTIVE_FORWARD_START.isoformat(),
@@ -208,6 +219,7 @@ def _adaptive_candidate(
         "progress_percent": round(collected / ADAPTIVE_SCREEN_BLOCKS * 100, 2),
         "risk_tiers": {"three_confirmations": "0.5%", "four_confirmations": "1.25%"},
         "maximum_leverage": 10,
+        "screen": screen,
         "paper_enabled": False, "live_enabled": False,
     }
 
@@ -264,14 +276,22 @@ def _profit_protection_candidate(
             if previous[1] != current[0]:
                 raise ValueError("Profit-protection forward evidence has a gap")
     collected = min(len(rows), PROFIT_PROTECTION_SCREEN_BLOCKS)
+    screen = _stage(paths.profit_protection_protocol, "screen")
+    status = (
+        "collecting_forward_screen" if collected < PROFIT_PROTECTION_SCREEN_BLOCKS
+        else "screen_ready_for_evaluation" if screen["status"] == "not_evaluated"
+        else "screen_passed" if screen["passed"]
+        else "hypothesis_failed"
+    )
     return {
-        "status": "collecting_forward_screen", "verified": True,
+        "status": status, "verified": True,
         "protocol_version": protocol["protocol_version"],
         "forward_start": PROFIT_PROTECTION_FORWARD_START.isoformat(),
         "collected": collected, "required": PROFIT_PROTECTION_SCREEN_BLOCKS,
         "progress_percent": round(collected / PROFIT_PROTECTION_SCREEN_BLOCKS * 100, 2),
         "profit_protection": "close-confirmed +1R trigger; entry-price stop next bar",
-        "maximum_leverage": 10, "paper_enabled": False, "live_enabled": False,
+        "maximum_leverage": 10, "screen": screen,
+        "paper_enabled": False, "live_enabled": False,
     }
 
 
